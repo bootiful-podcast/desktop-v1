@@ -9,8 +9,6 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 
-import java.io.IOException;
-
 public class JavaFxApplication extends Application {
 
 	private ConfigurableApplicationContext context;
@@ -30,7 +28,7 @@ public class JavaFxApplication extends Application {
 	}
 
 	@Override
-	public void start(Stage stage) throws IOException {
+	public void start(Stage stage) {
 		this.context.publishEvent(new StageReadyEvent(stage));
 	}
 
