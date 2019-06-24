@@ -3,24 +3,13 @@ package fm.bootifulpodcast.desktop;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.event.EventListener;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-
 
 public class JavaFxApplication extends Application {
 

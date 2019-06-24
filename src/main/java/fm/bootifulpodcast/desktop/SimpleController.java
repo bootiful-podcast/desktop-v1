@@ -1,9 +1,10 @@
 package fm.bootifulpodcast.desktop;
 
-import javafx.application.HostServices;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -11,18 +12,34 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SimpleController {
 
-	private final HostServices hostServices;
-
+	@FXML
+	public VBox dropTarget;
+	@FXML
+	public Label dropped;
 	@FXML
 	public Label label;
 
 	@FXML
-	public Button button;
-
-	@FXML
 	public void initialize() {
-		this.button.setOnAction(actionEvent ->
-			this.label.setText(this.hostServices.getDocumentBase())
-		);
+
+		dropTarget.setOnDragOver(event -> {
+			if (event.getGestureSource() != dropTarget && event.getDragboard().hasFiles()) {
+				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+			}
+			event.consume();
+		});
+
+		dropTarget.setOnDragDropped(event -> {
+			Dragboard db = event.getDragboard();
+			boolean success = false;
+			if (db.hasFiles()) {
+				dropped.setText(db.getFiles().toString());
+				success = true;
+			}
+			event.setDropCompleted(success);
+			event.consume();
+		});
+
+
 	}
 }

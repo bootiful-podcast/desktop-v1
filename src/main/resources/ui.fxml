@@ -1,8 +1,11 @@
-<?import javafx.scene.control.Button?>
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns:fx="http://javafx.com/fxml" spacing="10" alignment="CENTER"
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:id="dropTarget" alignment="CENTER"
+      prefHeight="166.0" prefWidth="62.0" spacing="10"
+      xmlns="http://javafx.com/javafx/8.0.999-ea"
       fx:controller="fm.bootifulpodcast.desktop.SimpleController">
-    <Button fx:id="button" text="Show me the codebase!"/>
-    <Label fx:id="label"/>
+    <Label fx:id="label" text="Drop Files" textAlignment="CENTER"/>
+    <Label fx:id="dropped"/>
 </VBox>
