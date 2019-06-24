@@ -49,24 +49,25 @@ public class UploadController {
 	public GridPane filesGridPane;
 	@FXML
 	public TextArea description;
-	private String interviewLabelText = "Interview media";
-	private String introductionLabelText = "Introduction media";
+
+
 	private Label introductionLabel, interviewLabel;
+	private final String interviewLabelText = "Interview media";
+	private final String introductionLabelText = "Introduction media";
+	private final String dropTheMediaOnToPanelText = "Drop the %s onto the panel below...";
 
 	void checkIfCanPublish() {
-		String text = this.description.getText();
-		if (StringUtils.hasText(text)) {
-			if (this.interviewFile.get() != null && this.introductionFile.get() != null) {
-				publish.setDisable(false);
-			}
-		}
+		var text = this.description.getText();
+		var shouldBeEnabled = StringUtils.hasText(text) && this.interviewFile.get() != null && this.introductionFile.get() != null;
+		publish.setDisable(!shouldBeEnabled);
+
 	}
 
 	void handleIntroductionFileDandD(File file) {
 		this.introductionFile.set(file);
 		this.introductionLabel.setText(file.getAbsolutePath());
-		this.interviewLabel = this.newRow(nextRow(), "Interview Media");
-		this.prompt.setText("Drop the interview file onto the panel below");
+		this.interviewLabel = this.newRow(nextRow(), this.interviewLabelText);
+		this.prompt.setText(String.format(this.dropTheMediaOnToPanelText, this.interviewLabelText));
 		checkIfCanPublish();
 	}
 
@@ -114,18 +115,17 @@ public class UploadController {
 			event.setDropCompleted(success);
 			event.consume();
 		});
-		this.introductionLabel = this.newRow(nextRow(), "Introduction Media");
-
-		this.prompt.setText("Drop the introduction file onto the panel below");
+		this.introductionLabel = this.newRow(nextRow(), this.introductionLabelText);
+		this.prompt.setText(String.format(this.dropTheMediaOnToPanelText, this.introductionLabelText));
 	}
 
 	private int nextRow() {
 		return rowCount.getAndIncrement();
 	}
 
-
 	private Label newRow(int rowNumber, String label) {
 		var description = new Label(label);
+
 		var file = new Label("file://");
 		file.setPadding(new Insets(0, 0, 0, 10));
 		filesGridPane.add(description, 0, rowNumber, 1, 1);
