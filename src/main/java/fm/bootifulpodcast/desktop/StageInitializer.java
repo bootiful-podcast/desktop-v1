@@ -17,25 +17,29 @@ import java.util.Locale;
 class StageInitializer {
 
 	private final String applicationTitle;
+
 	private final ApplicationContext applicationContext;
 
-	StageInitializer(MessageSource ms, Locale locale, ApplicationContext applicationContext) {
+	StageInitializer(MessageSource ms, Locale locale,
+			ApplicationContext applicationContext) {
 		this.applicationTitle = ms.getMessage("ui-title", new Object[0], locale);
 		this.applicationContext = applicationContext;
 	}
 
 	@EventListener
 	public void stageIsReady(StageReadyEvent sre) throws Exception {
-		var stage = sre.getStage();
+		var stage = sre.getSource();
 		var fxml = new ClassPathResource("/ui.fxml");
 		var fxmlLoader = new FXMLLoader(fxml.getURL());
 		fxmlLoader.setControllerFactory(this.applicationContext::getBean);
 		var root = (Parent) fxmlLoader.load();
-		var scene = new Scene(root, 800, 350);
+		var scene = new Scene(root/* , 800, 350 */);
+
 		stage.setScene(scene);
 
 		stage.setTitle(this.applicationTitle);
 		stage.show();
 
 	}
+
 }

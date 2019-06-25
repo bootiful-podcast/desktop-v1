@@ -15,16 +15,14 @@ public class JavaFxApplication extends Application {
 
 	@Override
 	public void init() {
-		ApplicationContextInitializer<GenericApplicationContext> initializer =
-			context -> {
-				context.registerBean(Application.class, () -> JavaFxApplication.this);
-				context.registerBean(Parameters.class, this::getParameters);
-				context.registerBean(HostServices.class, this::getHostServices);
-			};
-		this.context = new SpringApplicationBuilder()
-			.sources(BootifulFxApplication.class)
-			.initializers(initializer)
-			.run(getParameters().getRaw().toArray(new String[0]));
+		ApplicationContextInitializer<GenericApplicationContext> initializer = context -> {
+			context.registerBean(Application.class, () -> JavaFxApplication.this);
+			context.registerBean(Parameters.class, this::getParameters);
+			context.registerBean(HostServices.class, this::getHostServices);
+		};
+		this.context = new SpringApplicationBuilder().sources(BootifulFxApplication.class)
+				.initializers(initializer)
+				.run(getParameters().getRaw().toArray(new String[0]));
 	}
 
 	@Override
@@ -37,5 +35,5 @@ public class JavaFxApplication extends Application {
 		this.context.close();
 		Platform.exit();
 	}
-}
 
+}
