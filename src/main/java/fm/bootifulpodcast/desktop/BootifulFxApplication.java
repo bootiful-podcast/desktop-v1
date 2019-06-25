@@ -43,9 +43,8 @@ public class BootifulFxApplication {
 
 	@Bean
 	ApiClient apiClient(@Value("${podcast.api.url}") String apiUrl,
-																					ScheduledExecutorService executorService,
-																					ApplicationEventPublisher publisher,
-																					RestTemplate restTemplate) {
+			ScheduledExecutorService executorService, ApplicationEventPublisher publisher,
+			RestTemplate restTemplate) {
 		return new ApiClient(apiUrl, executorService, publisher, restTemplate);
 	}
 
@@ -68,4 +67,5 @@ public class BootifulFxApplication {
 		var processors = Runtime.getRuntime().availableProcessors();
 		return processors > 2 ? processors / 2 : processors;
 	}
+
 }
