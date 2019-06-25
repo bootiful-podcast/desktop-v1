@@ -83,7 +83,6 @@ public class UploadController {
 		this.introductionLabelText = messageSource.getMessage("introduction-media", emptyArgs, this.locale);
 		this.interviewLabelText = messageSource.getMessage("interview-media", emptyArgs, this.locale);
 		this.descriptionLabelText = messageSource.getMessage("description-prompt", emptyArgs, this.locale);
-
 	}
 
 	@EventListener(FormManipulationEvent.class)
