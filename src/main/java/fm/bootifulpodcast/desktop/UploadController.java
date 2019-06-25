@@ -87,7 +87,6 @@ public class UploadController {
 
 	@FXML
 	public Label filePromptLabel;
-
 	@FXML
 	public Label descriptionLabel;
 	@FXML
@@ -97,7 +96,6 @@ public class UploadController {
 
 	UploadController(Locale locale, ApplicationEventPublisher publisher,
 			MessageSource messageSource) {
-
 
 		var emptyArgs = new Object[0];
 
@@ -116,8 +114,6 @@ public class UploadController {
 				this.locale);
 		this.descriptionLabelText = messageSource.getMessage("description-prompt",
 				emptyArgs, this.locale);
-
-		//
 		this.introductionDandDText = this.messageSource.getMessage(
 				this.dropTheMediaOnThePanelBundleCode,
 				new Object[] { this.interviewLabelText }, this.locale);
@@ -179,7 +175,6 @@ public class UploadController {
 			return imageView;
 		}
 	}
-
 
 	@FXML
 	@SneakyThrows
