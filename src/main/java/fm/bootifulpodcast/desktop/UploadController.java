@@ -188,7 +188,7 @@ public class UploadController {
 		var builder = podcast.addMedia(interviewFileExt, introductionFile.get(),
 				interviewFile.get());
 		var archive = builder.build();
-		var productionStatus = client.beginProduction(uuid, archive);
+		var productionStatus = this.client.beginProduction(uuid, archive);
 		var uriCompletableFuture = productionStatus.checkProductionStatus();
 		uriCompletableFuture.thenAccept(uri -> log.info("the produced MP3 is " + uri));
 	}
