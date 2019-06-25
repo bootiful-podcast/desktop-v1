@@ -9,52 +9,70 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 
 @Log4j2
 @Component
-@RequiredArgsConstructor
 public class UploadController {
-/*
-	@FXML
-	public Button newPodcast;
 
-	@FXML
-	public Button publish;*/
-
-	private final AtomicReference<File> introductionFile = new AtomicReference<>();
 	private final AtomicInteger rowCount = new AtomicInteger(0);
+	private final AtomicReference<File> introductionFile = new AtomicReference<>();
 	private final AtomicReference<File> interviewFile = new AtomicReference<>();
+
 	@FXML
 	public Label prompt;
+
 	@FXML
 	public Button newPodcast;
+
 	@FXML
 	public HBox buttons;
 
 	@FXML
 	public VBox dropTarget;
+
 	@FXML
 	public Button publish;
+
 	@FXML
 	public GridPane filesGridPane;
+
 	@FXML
 	public TextArea description;
 
 
+	private final Locale locale = Locale.getDefault();
 	private Label introductionLabel, interviewLabel;
-	private final String interviewLabelText = "Interview media";
-	private final String introductionLabelText = "Introduction media";
-	private final String dropTheMediaOnToPanelText = "Drop the %s onto the panel below...";
+	private final String interviewLabelText;
+	private final String introductionLabelText;
+	private final String dropTheMediaOnToPanelText;
+
+	public UploadController(MessageSource messageSource) {
+
+
+		this.introductionLabelText = messageSource.getMessage("introduction-media",
+			new Object[0],
+			this.locale);
+
+		this.interviewLabelText = messageSource.getMessage("interview-media",
+			new Object[0],
+			this.locale);
+
+		this.dropTheMediaOnToPanelText = messageSource.getMessage("drop-the-media-on-the-panel",
+			new Object[0],
+			this.locale);
+
+	}
 
 	void checkIfCanPublish() {
 		var text = this.description.getText();

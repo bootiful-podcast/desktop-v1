@@ -33,7 +33,7 @@ public class JavaFxApplication extends Application {
 	}
 
 	@Override
-	public void stop() throws Exception {
+	public void stop() {
 		this.context.close();
 		Platform.exit();
 	}

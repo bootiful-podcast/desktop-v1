@@ -4,11 +4,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.MessageSource;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+
+import java.util.Locale;
 
 @Log4j2
 @Component
@@ -16,10 +18,10 @@ class StageInitializer {
 
 	private final String applicationTitle;
 	private final ApplicationContext applicationContext;
+	private final Locale locale = Locale.getDefault();
 
-	StageInitializer(@Value("${spring.application.ui.title}") String applicationTitle,
-																		ApplicationContext applicationContext) {
-		this.applicationTitle = applicationTitle;
+	StageInitializer(MessageSource ms, ApplicationContext applicationContext) {
+		this.applicationTitle = ms.getMessage("ui-title", new Object[0], this.locale);
 		this.applicationContext = applicationContext;
 	}
 
