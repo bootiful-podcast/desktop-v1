@@ -19,6 +19,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -57,6 +58,7 @@ public class UploadController {
 	private final String pleaseSpecifyAFileLabelText;
 	private final String publishButtonText;
 	private final String interviewLabelText;
+	private final String descriptionLabelText;
 	private final String introductionLabelText;
 	private final String newPodcastText;
 	private final ApplicationEventPublisher publisher;
@@ -66,7 +68,9 @@ public class UploadController {
 	@FXML
 	public Label descriptionLabel;
 
-	public UploadController(Locale locale, ApplicationEventPublisher publisher, MessageSource messageSource) {
+	UploadController(Locale locale,
+																		ApplicationEventPublisher publisher,
+																		MessageSource messageSource) {
 
 		var emptyArgs = new Object[0];
 
@@ -78,6 +82,7 @@ public class UploadController {
 		this.newPodcastText = messageSource.getMessage("new-podcast", emptyArgs, this.locale);
 		this.introductionLabelText = messageSource.getMessage("introduction-media", emptyArgs, this.locale);
 		this.interviewLabelText = messageSource.getMessage("interview-media", emptyArgs, this.locale);
+		this.descriptionLabelText = messageSource.getMessage("description-prompt", emptyArgs, this.locale);
 
 	}
 
@@ -85,12 +90,13 @@ public class UploadController {
 	void checkIfCanPublish() {
 
 		var text = this.description.getText();
-
-		var shouldBeEnabled = StringUtils.hasText(text) &&
-			this.interviewFile.get() != null &&
-			this.introductionFile.get() != null;
-
-		this.publish.setDisable(!shouldBeEnabled);
+		var dirtyTracker = Arrays.asList(
+			StringUtils.hasText(text),
+			this.interviewFile.get() != null,
+			this.introductionFile.get() != null
+		);
+		this.publish.setDisable(!dirtyTracker.stream().allMatch(p -> p));
+		this.newPodcast.setDisable(dirtyTracker.stream().noneMatch(p -> p));
 	}
 
 	private void handleIntroductionFileDandD(File file) {
@@ -128,6 +134,8 @@ public class UploadController {
 		this.introductionFile.set(null);
 		this.interviewLabel.setText(this.pleaseSpecifyAFileLabelText);
 		this.introductionLabel.setText(this.pleaseSpecifyAFileLabelText);
+		this.descriptionLabel.setText(this.descriptionLabelText);
+		this.newPodcast.setDisable(true);
 	}
 
 	@FXML
@@ -179,8 +187,6 @@ public class UploadController {
 		this.filesGridPane.add(file, 1, rowNumber, 3, 1);
 		return file;
 	}
-
-
 }
 
 

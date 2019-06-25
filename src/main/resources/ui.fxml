@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
-<VBox fx:id="dropTarget" alignment="CENTER" spacing="10"
-      xmlns="http://javafx.com/javafx/8.0.999-ea"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="fm.bootifulpodcast.desktop.UploadController">
-    <Label fx:id="label" text="Drop Files" textAlignment="CENTER"/>
-    <Label fx:id="dropped" prefHeight="113.0" prefWidth="30.0"/>
-</VBox>
--->
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -28,12 +18,18 @@
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                 </padding>
             </HBox>
-            <Label fx:id="descriptionLabel"/>
-            <TextArea fx:id="description" wrapText="true">
+            <Label fx:id="descriptionLabel">
+                <padding>
+                    <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
+                </padding>
+            </Label>
+            <VBox>
+                <TextArea fx:id="description" wrapText="true" maxHeight="80"/>
                 <padding>
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                 </padding>
-            </TextArea>
+            </VBox>
+
         </VBox>
     </top>
 
