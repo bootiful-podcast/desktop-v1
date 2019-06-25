@@ -2,18 +2,23 @@ package fm.bootifulpodcast.desktop;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -42,8 +47,8 @@ public class UploadController {
 	@FXML
 	public HBox buttons;
 
-	@FXML
-	public VBox dropTarget;
+	private final ImageView connectedImageView = imageViewForResource(
+		new ClassPathResource("images/connected-icon.png"));
 
 	@FXML
 	public Button publish;
@@ -77,15 +82,22 @@ public class UploadController {
 	private final ApplicationEventPublisher publisher;
 
 	private final MessageSource messageSource;
+	private final ImageView disconnectedImageView = imageViewForResource(
+		new ClassPathResource("images/disconnected-icon.png"));
 
 	@FXML
 	public Label filePromptLabel;
 
 	@FXML
 	public Label descriptionLabel;
+	@FXML
+	public Node dropTarget;
+	@FXML
+	public Label connectedIcon;
 
 	UploadController(Locale locale, ApplicationEventPublisher publisher,
 			MessageSource messageSource) {
+
 
 		var emptyArgs = new Object[0];
 
@@ -141,6 +153,7 @@ public class UploadController {
 	}
 
 	public void discardPodcast() {
+		this.connectedIcon.setGraphic(connectedImageView);
 		this.newPodcast.setText(this.newPodcastText);
 		this.publish.setText(this.publishButtonText);
 		this.filePromptLabel.setText(
@@ -156,8 +169,22 @@ public class UploadController {
 		this.newPodcast.setDisable(true);
 	}
 
+	@SneakyThrows
+	private ImageView imageViewForResource(Resource resource) {
+		try (var in = resource.getInputStream()) {
+			ImageView imageView = new ImageView(new Image(in));
+			imageView.setSmooth(true);
+			imageView.setPreserveRatio(true);
+			imageView.setFitHeight(30);
+			return imageView;
+		}
+	}
+
+
 	@FXML
+	@SneakyThrows
 	public void initialize() {
+
 		this.publish.setOnMouseClicked(mouseEvent -> this.handlePublish());
 		this.description.setOnKeyTyped(keyEvent -> this.checkIfCanPublish());
 		this.dropTarget.setOnDragOver(event -> {
@@ -202,7 +229,7 @@ public class UploadController {
 		var description = new Label(label);
 		var file = new Label();
 		file.setText(this.pleaseSpecifyAFileLabelText);
-		file.setStyle("color: gray");
+		file.setStyle("color: red");
 		file.setPadding(new Insets(0, 0, 0, 10));
 		this.filesGridPane.add(description, 0, rowNumber, 1, 1);
 		this.filesGridPane.add(file, 1, rowNumber, 3, 1);
@@ -211,9 +238,6 @@ public class UploadController {
 
 }
 
-// Published whenever any aspect of the UI
-// form is updated (new file uploaded, text entered)
-//
 class FormManipulationEvent extends ApplicationEvent {
 
 	FormManipulationEvent(Object source) {
@@ -221,3 +245,10 @@ class FormManipulationEvent extends ApplicationEvent {
 	}
 
 }
+/*
+	* TODO add a "connected" status bar that checks the service's Actuator endpoint.
+	*
+	* Label label1 = new Label("Search"); Image image = new
+	* Image(getClass().getResourceAsStream("labels.jpg")); label1.setGraphic(new
+	* ImageView(image)); label1.setTextFill(Color.web("#0076a3"));
+	*/
