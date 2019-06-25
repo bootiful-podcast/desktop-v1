@@ -190,9 +190,7 @@ public class UploadController {
 		var archive = builder.build();
 		var productionStatus = client.beginProduction(uuid, archive);
 		var uriCompletableFuture = productionStatus.checkProductionStatus();
-		uriCompletableFuture.thenAccept(uri -> {
-			log.info("the produced MP3 is " + uri);
-		});
+		uriCompletableFuture.thenAccept(uri -> log.info("the produced MP3 is " + uri));
 	}
 
 	public void discardPodcast() {
