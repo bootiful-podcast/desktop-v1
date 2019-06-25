@@ -25,9 +25,7 @@ public class ApiClient {
 
 	private final ApplicationEventPublisher publisher;
 
-	private final String serverUrl;
-
-	private final String actuatorUrl;
+	private final String serverUrl, actuatorUrl;
 
 	public ApiClient(String serverUrl, ScheduledExecutorService executor,
 			ApplicationEventPublisher publisher, RestTemplate restTemplate) {
@@ -44,14 +42,11 @@ public class ApiClient {
 		log.debug("the server URL is " + this.serverUrl + " and the actuator URL is "
 				+ this.actuatorUrl);
 
-		// kick off a background thread to monitor the actuator endpoint
-		this.executor.submit(this::monitorConnectedEndpoint);
-
 		this.executor.scheduleAtFixedRate(this::monitorConnectedEndpoint, 0, 5,
 				TimeUnit.SECONDS);
 	}
 
-	protected void monitorConnectedEndpoint() {
+	private void monitorConnectedEndpoint() {
 		try {
 			log.debug("contacting the following endpoint to "
 					+ "verify that we're connected to " + this.serverUrl);
