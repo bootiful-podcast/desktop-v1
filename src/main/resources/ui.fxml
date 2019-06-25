@@ -11,9 +11,7 @@
 -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             xmlns="http://javafx.com/javafx/8.0.999-ea"
@@ -24,12 +22,13 @@
             <HBox fx:id="buttons"
                   spacing="10"
                   style="-fx-background-color: #336699">
-                <Button fx:id="newPodcast" text="New Podcast"/>
-                <Button fx:id="publish" disable="true" text="Publish"/>
+                <Button fx:id="newPodcast"/>
+                <Button fx:id="publish" disable="true"/>
                 <padding>
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                 </padding>
             </HBox>
+            <Label fx:id="descriptionLabel"/>
             <TextArea fx:id="description" wrapText="true">
                 <padding>
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
@@ -43,22 +42,8 @@
             <padding>
                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
             </padding>
-            <Label fx:id="prompt">
-                Please drag and drop the introduction media (.wav or .mp3) onto
-                this panel.
-            </Label>
-            <!--  <HBox fx:id="introductionMedia">
-
-              </HBox>
-              <HBox fx:id="interviewLabel">
-
-              </HBox>-->
-            <GridPane fx:id="filesGridPane">
-
-
-            </GridPane>
-
-
+            <Label fx:id="filePromptLabel"></Label>
+            <GridPane fx:id="filesGridPane"></GridPane>
         </VBox>
     </center>
 

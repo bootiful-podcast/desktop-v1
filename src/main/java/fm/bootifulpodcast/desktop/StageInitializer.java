@@ -18,15 +18,14 @@ class StageInitializer {
 
 	private final String applicationTitle;
 	private final ApplicationContext applicationContext;
-	private final Locale locale = Locale.getDefault();
 
-	StageInitializer(MessageSource ms, ApplicationContext applicationContext) {
-		this.applicationTitle = ms.getMessage("ui-title", new Object[0], this.locale);
+	StageInitializer(MessageSource ms, Locale locale, ApplicationContext applicationContext) {
+		this.applicationTitle = ms.getMessage("ui-title", new Object[0], locale);
 		this.applicationContext = applicationContext;
 	}
 
 	@EventListener
-	public void dand(StageReadyEvent sre) throws Exception {
+	public void stageIsReady(StageReadyEvent sre) throws Exception {
 		var stage = sre.getStage();
 		var fxml = new ClassPathResource("/ui.fxml");
 		var fxmlLoader = new FXMLLoader(fxml.getURL());

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 @Log4j2
 @SpringBootApplication
@@ -19,13 +20,18 @@ public class BootifulFxApplication {
 
 	@Bean
 	MessageSource messageSource() {
-		var messageSource = new ReloadableResourceBundleMessageSource();
-		messageSource.setBasename("classpath:messages/labels");
 		var utf8 = StandardCharsets.UTF_8.toString();
-		log.info("default encoding is " + utf8);
-		messageSource.setDefaultEncoding(utf8);
-		return messageSource;
+		log.info("default encoding is: " + utf8);
+
+		var resourceBundleMessageSource = new ReloadableResourceBundleMessageSource();
+		resourceBundleMessageSource.setBasename("classpath:messages/labels");
+		resourceBundleMessageSource.setDefaultEncoding(utf8);
+		return resourceBundleMessageSource;
 	}
 
+	@Bean
+	Locale locale() {
+		return Locale.getDefault();
+	}
 
 }
