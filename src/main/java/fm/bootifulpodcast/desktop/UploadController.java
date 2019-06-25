@@ -1,5 +1,8 @@
 package fm.bootifulpodcast.desktop;
 
+import fm.bootifulpodcast.desktop.client.ApiConnectedEvent;
+import fm.bootifulpodcast.desktop.client.ApiDisconnectedEvent;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -26,6 +29,7 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -46,9 +50,6 @@ public class UploadController {
 
 	@FXML
 	public HBox buttons;
-
-	private final ImageView connectedImageView = imageViewForResource(
-		new ClassPathResource("images/connected-icon.png"));
 
 	@FXML
 	public Button publish;
@@ -80,8 +81,13 @@ public class UploadController {
 	private final String newPodcastText;
 
 	private final ApplicationEventPublisher publisher;
+	private final AtomicBoolean connected = new AtomicBoolean();
 
 	private final MessageSource messageSource;
+
+	private final ImageView connectedImageView = imageViewForResource(
+		new ClassPathResource("images/connected-icon.png"));
+
 	private final ImageView disconnectedImageView = imageViewForResource(
 		new ClassPathResource("images/disconnected-icon.png"));
 
@@ -94,8 +100,9 @@ public class UploadController {
 	@FXML
 	public Label connectedIcon;
 
+
 	UploadController(Locale locale, ApplicationEventPublisher publisher,
-			MessageSource messageSource) {
+																		MessageSource messageSource) {
 
 		var emptyArgs = new Object[0];
 
@@ -103,37 +110,51 @@ public class UploadController {
 		this.messageSource = messageSource;
 		this.publisher = publisher;
 		this.publishButtonText = messageSource.getMessage("publish", emptyArgs,
-				this.locale);
+			this.locale);
 		this.pleaseSpecifyAFileLabelText = messageSource.getMessage("no-file-specified",
-				emptyArgs, this.locale);
+			emptyArgs, this.locale);
 		this.newPodcastText = messageSource.getMessage("new-podcast", emptyArgs,
-				this.locale);
+			this.locale);
 		this.introductionLabelText = messageSource.getMessage("introduction-media",
-				emptyArgs, this.locale);
+			emptyArgs, this.locale);
 		this.interviewLabelText = messageSource.getMessage("interview-media", emptyArgs,
-				this.locale);
+			this.locale);
 		this.descriptionLabelText = messageSource.getMessage("description-prompt",
-				emptyArgs, this.locale);
+			emptyArgs, this.locale);
 		this.introductionDandDText = this.messageSource.getMessage(
-				this.dropTheMediaOnThePanelBundleCode,
-				new Object[] { this.interviewLabelText }, this.locale);
+			this.dropTheMediaOnThePanelBundleCode,
+			new Object[]{this.interviewLabelText}, this.locale);
 		this.interviewDandDText = this.messageSource.getMessage(
-				this.dropTheMediaOnThePanelBundleCode,
-				new Object[] { this.interviewLabelText }, this.locale);
+			this.dropTheMediaOnThePanelBundleCode,
+			new Object[]{this.interviewLabelText}, this.locale);
 	}
 
 	@EventListener(FormManipulationEvent.class)
-	void checkIfCanPublish() {
+	public void handleInputUpdates() {
+		this.repaint();
+	}
 
+	private void repaint() {
 		var text = this.description.getText();
-		var dirtyTracker = Arrays.asList(StringUtils.hasText(text),
-				this.interviewFile.get() != null, this.introductionFile.get() != null);
-		this.publish.setDisable(!dirtyTracker.stream().allMatch(p -> p));
+		var dirtyTracker = Arrays.asList(StringUtils.hasText(text.trim()),
+			this.interviewFile.get() != null, this.introductionFile.get() != null);
+		var allMatch = dirtyTracker.stream().allMatch(p -> p);
+		log.info("are all forms set? " + allMatch);
+		var connected = this.connected.get();
+		log.debug("connected? " + connected);
+		var formFilledAndConnected = allMatch && connected;
+		this.publish.setDisable(!formFilledAndConnected);
 		this.newPodcast.setDisable(dirtyTracker.stream().noneMatch(p -> p));
+		if (this.connected.get()) {
+			this.connectedIcon.setGraphic(this.connectedImageView);
+		}
+		else {
+			this.connectedIcon.setGraphic(this.disconnectedImageView);
+		}
 	}
 
 	private void updateFilePromptAfterDandD(Label fileLabel, String promptLabelText,
-			AtomicReference<File> fileAtomicReference, File file) {
+																																									AtomicReference<File> fileAtomicReference, File file) {
 		fileAtomicReference.set(file);
 		fileLabel.setText(file.getAbsolutePath());
 		this.filePromptLabel.setText(promptLabelText);
@@ -142,10 +163,10 @@ public class UploadController {
 
 	private void handlePublish() {
 		log.info(String.format(
-				"ready to publish! we have " + "an introduction media asset (%s) and an "
-						+ "interview media asset (%s) and a description: %s",
-				this.introductionFile.get().getAbsolutePath(),
-				this.interviewFile.get().getAbsolutePath(), this.description.getText()));
+			"ready to publish! we have " + "an introduction media asset (%s) and an "
+				+ "interview media asset (%s) and a description: %s",
+			this.introductionFile.get().getAbsolutePath(),
+			this.interviewFile.get().getAbsolutePath(), this.description.getText()));
 	}
 
 	public void discardPodcast() {
@@ -153,8 +174,8 @@ public class UploadController {
 		this.newPodcast.setText(this.newPodcastText);
 		this.publish.setText(this.publishButtonText);
 		this.filePromptLabel.setText(
-				this.messageSource.getMessage(this.dropTheMediaOnThePanelBundleCode,
-						new Object[] { this.introductionLabelText }, this.locale));
+			this.messageSource.getMessage(this.dropTheMediaOnThePanelBundleCode,
+				new Object[]{this.introductionLabelText}, this.locale));
 		this.publish.setDisable(true);
 		this.description.setText("");
 		this.interviewFile.set(null);
@@ -181,10 +202,10 @@ public class UploadController {
 	public void initialize() {
 
 		this.publish.setOnMouseClicked(mouseEvent -> this.handlePublish());
-		this.description.setOnKeyTyped(keyEvent -> this.checkIfCanPublish());
+		this.description.setOnKeyTyped(keyEvent -> this.repaint());
 		this.dropTarget.setOnDragOver(event -> {
 			if (event.getGestureSource() != this.dropTarget
-					&& event.getDragboard().hasFiles()) {
+				&& event.getDragboard().hasFiles()) {
 				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
 			}
 			event.consume();
@@ -195,15 +216,15 @@ public class UploadController {
 			if (eventDragboard.hasFiles()) {
 				var files = eventDragboard.getFiles();
 				Assert.isTrue(files != null && files.size() <= 1,
-						"there must be only one file");
+					"there must be only one file");
 				if (this.introductionFile.get() == null) {
 					this.updateFilePromptAfterDandD(this.introductionLabel,
-							this.introductionDandDText, this.introductionFile,
-							files.get(0));
+						this.introductionDandDText, this.introductionFile,
+						files.get(0));
 				}
 				else if (this.interviewFile.get() == null) {
 					this.updateFilePromptAfterDandD(this.interviewLabel,
-							this.interviewDandDText, this.interviewFile, files.get(0));
+						this.interviewDandDText, this.interviewFile, files.get(0));
 				}
 				success = true;
 			}
@@ -231,6 +252,20 @@ public class UploadController {
 		return file;
 	}
 
+	@EventListener(ApiConnectedEvent.class)
+	public void connected() {
+		log.info("connected...");
+		this.connected.set(true);
+		Platform.runLater(this::repaint);
+	}
+
+	@EventListener(ApiDisconnectedEvent.class)
+	public void disconnected() {
+		log.info("disconnected...");
+		this.connected.set(false);
+		Platform.runLater(this::repaint);
+	}
+
 }
 
 class FormManipulationEvent extends ApplicationEvent {
@@ -238,12 +273,4 @@ class FormManipulationEvent extends ApplicationEvent {
 	FormManipulationEvent(Object source) {
 		super(source);
 	}
-
 }
-/*
-	* TODO add a "connected" status bar that checks the service's Actuator endpoint.
-	*
-	* Label label1 = new Label("Search"); Image image = new
-	* Image(getClass().getResourceAsStream("labels.jpg")); label1.setGraphic(new
-	* ImageView(image)); label1.setTextFill(Color.web("#0076a3"));
-	*/
