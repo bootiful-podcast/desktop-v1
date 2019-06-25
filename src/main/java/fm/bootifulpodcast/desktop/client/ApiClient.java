@@ -3,11 +3,18 @@ package fm.bootifulpodcast.desktop.client;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
+import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,7 +57,6 @@ public class ApiClient {
 		try {
 			log.debug("contacting the following endpoint to "
 					+ "verify that we're connected to " + this.serverUrl);
-
 			var typeReference = new ParameterizedTypeReference<Map<String, Object>>() {
 			};
 			var entity = this.restTemplate.exchange(this.actuatorUrl, HttpMethod.GET,
@@ -76,6 +82,23 @@ public class ApiClient {
 		else {
 			publisher.publishEvent(new ApiDisconnectedEvent());
 		}
+	}
+
+	public ProductionStatus beginProduction(String uid, File archive) {
+		var headers = new HttpHeaders();
+		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+		var resource = new FileSystemResource(archive);
+		var body = new LinkedMultiValueMap<String, Object>();
+		body.add("file", resource);
+		var requestEntity = new HttpEntity<MultiValueMap<String, Object>>(body, headers);
+		var url = this.serverUrl + "/podcasts/" + uid;
+		var response = restTemplate.postForEntity(url, requestEntity, String.class);
+		var good = response.getStatusCode().is2xxSuccessful();
+		URI location = response.getHeaders().getLocation();
+		Assert.notNull(location, "the location URI must be non-null");
+		return new ProductionStatus(this.executor, this.restTemplate, null, good, uid,
+				response.getStatusCode(),
+				URI.create(this.serverUrl + location.getPath()));
 	}
 
 }
