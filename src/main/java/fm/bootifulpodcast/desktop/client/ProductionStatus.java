@@ -19,7 +19,7 @@ public class ProductionStatus {
 	private RestTemplate template;
 
 	public ProductionStatus(Executor ex, RestTemplate rt, String errMsg,
-																									boolean published, String uid, HttpStatus status, URI statusUrl) {
+			boolean published, String uid, HttpStatus status, URI statusUrl) {
 		this.executor = ex;
 		this.template = rt;
 		this.uid = uid;

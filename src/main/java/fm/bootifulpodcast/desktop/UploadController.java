@@ -91,10 +91,10 @@ public class UploadController {
 	private final MessageSource messageSource;
 
 	private final ImageView connectedImageView = imageViewForResource(
-		new ClassPathResource("images/connected-icon.png"));
+			new ClassPathResource("images/connected-icon.png"));
 
 	private final ImageView disconnectedImageView = imageViewForResource(
-		new ClassPathResource("images/disconnected-icon.png"));
+			new ClassPathResource("images/disconnected-icon.png"));
 
 	@FXML
 	public Label filePromptLabel;
@@ -109,7 +109,7 @@ public class UploadController {
 	public Label connectedIcon;
 
 	UploadController(Locale locale, ApiClient client, Executor executor,
-																		ApplicationEventPublisher publisher, MessageSource messageSource) {
+			ApplicationEventPublisher publisher, MessageSource messageSource) {
 
 		var emptyArgs = new Object[0];
 
@@ -119,23 +119,23 @@ public class UploadController {
 		this.messageSource = messageSource;
 		this.publisher = publisher;
 		this.publishButtonText = messageSource.getMessage("publish", emptyArgs,
-			this.locale);
+				this.locale);
 		this.pleaseSpecifyAFileLabelText = messageSource.getMessage("no-file-specified",
-			emptyArgs, this.locale);
+				emptyArgs, this.locale);
 		this.newPodcastText = messageSource.getMessage("new-podcast", emptyArgs,
-			this.locale);
+				this.locale);
 		this.introductionLabelText = messageSource.getMessage("introduction-media",
-			emptyArgs, this.locale);
+				emptyArgs, this.locale);
 		this.interviewLabelText = messageSource.getMessage("interview-media", emptyArgs,
-			this.locale);
+				this.locale);
 		this.descriptionLabelText = messageSource.getMessage("description-prompt",
-			emptyArgs, this.locale);
+				emptyArgs, this.locale);
 		this.introductionDandDText = this.messageSource.getMessage(
-			this.dropTheMediaOnThePanelBundleCode,
-			new Object[]{this.interviewLabelText}, this.locale);
+				this.dropTheMediaOnThePanelBundleCode,
+				new Object[] { this.interviewLabelText }, this.locale);
 		this.interviewDandDText = this.messageSource.getMessage(
-			this.dropTheMediaOnThePanelBundleCode,
-			new Object[]{this.interviewLabelText}, this.locale);
+				this.dropTheMediaOnThePanelBundleCode,
+				new Object[] { this.interviewLabelText }, this.locale);
 	}
 
 	@EventListener(FormManipulationEvent.class)
@@ -146,7 +146,7 @@ public class UploadController {
 	private void repaint() {
 		var text = this.description.getText();
 		var dirtyTracker = Arrays.asList(StringUtils.hasText(text.trim()),
-			this.interviewFile.get() != null, this.introductionFile.get() != null);
+				this.interviewFile.get() != null, this.introductionFile.get() != null);
 		var allMatch = dirtyTracker.stream().allMatch(p -> p);
 		log.info("are all forms set? " + allMatch);
 		var connected = this.connected.get();
@@ -163,7 +163,7 @@ public class UploadController {
 	}
 
 	private void updateFilePromptAfterDandD(Label fileLabel, String promptLabelText,
-																																									AtomicReference<File> fileAtomicReference, File file) {
+			AtomicReference<File> fileAtomicReference, File file) {
 		fileAtomicReference.set(file);
 		fileLabel.setText(file.getAbsolutePath());
 		this.filePromptLabel.setText(promptLabelText);
@@ -172,9 +172,9 @@ public class UploadController {
 
 	private void handlePublish() {
 		log.info(String.format(
-			"ready to publish! we have an introduction media asset (%s) and an interview media asset (%s) and a description: %s",
-			this.introductionFile.get().getAbsolutePath(),
-			this.interviewFile.get().getAbsolutePath(), this.description.getText()));
+				"ready to publish! we have an introduction media asset (%s) and an interview media asset (%s) and a description: %s",
+				this.introductionFile.get().getAbsolutePath(),
+				this.interviewFile.get().getAbsolutePath(), this.description.getText()));
 
 		var uuid = UUID.randomUUID().toString();
 		var podcast = new PodcastArchiveBuilder(this.description.getText(), uuid);
@@ -182,11 +182,11 @@ public class UploadController {
 		var introductionFileExt = FileUtils.extensionFor(this.introductionFile.get());
 		Assert.notNull(interviewFileExt, "the interview extension must not be null");
 		Assert.notNull(introductionFileExt,
-			"the introduction extension must not be null");
+				"the introduction extension must not be null");
 		Assert.isTrue(interviewFileExt.equalsIgnoreCase(introductionFileExt),
-			"the introduction file type and the interview file type must be the same");
+				"the introduction file type and the interview file type must be the same");
 		var builder = podcast.addMedia(interviewFileExt, introductionFile.get(),
-			interviewFile.get());
+				interviewFile.get());
 		var archive = builder.build();
 		var productionStatus = client.beginProduction(uuid, archive);
 		var uriCompletableFuture = productionStatus.checkProductionStatus();
@@ -200,8 +200,8 @@ public class UploadController {
 		this.newPodcast.setText(this.newPodcastText);
 		this.publish.setText(this.publishButtonText);
 		this.filePromptLabel.setText(
-			this.messageSource.getMessage(this.dropTheMediaOnThePanelBundleCode,
-				new Object[]{this.introductionLabelText}, this.locale));
+				this.messageSource.getMessage(this.dropTheMediaOnThePanelBundleCode,
+						new Object[] { this.introductionLabelText }, this.locale));
 		this.publish.setDisable(true);
 		this.description.setText("");
 		this.interviewFile.set(null);
@@ -228,11 +228,11 @@ public class UploadController {
 	public void initialize() {
 
 		this.publish
-			.setOnMouseClicked(mouseEvent -> executor.execute(this::handlePublish));
+				.setOnMouseClicked(mouseEvent -> executor.execute(this::handlePublish));
 		this.description.setOnKeyTyped(keyEvent -> this.repaint());
 		this.dropTarget.setOnDragOver(event -> {
 			if (event.getGestureSource() != this.dropTarget
-				&& event.getDragboard().hasFiles()) {
+					&& event.getDragboard().hasFiles()) {
 				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
 			}
 			event.consume();
@@ -243,15 +243,15 @@ public class UploadController {
 			if (eventDragboard.hasFiles()) {
 				var files = eventDragboard.getFiles();
 				Assert.isTrue(files != null && files.size() <= 1,
-					"there must be only one file");
+						"there must be only one file");
 				if (this.introductionFile.get() == null) {
 					this.updateFilePromptAfterDandD(this.introductionLabel,
-						this.introductionDandDText, this.introductionFile,
-						files.get(0));
+							this.introductionDandDText, this.introductionFile,
+							files.get(0));
 				}
 				else if (this.interviewFile.get() == null) {
 					this.updateFilePromptAfterDandD(this.interviewLabel,
-						this.interviewDandDText, this.interviewFile, files.get(0));
+							this.interviewDandDText, this.interviewFile, files.get(0));
 				}
 				success = true;
 			}
