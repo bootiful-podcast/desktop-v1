@@ -1,5 +1,6 @@
 package fm.bootifulpodcast.desktop;
 
+import fm.bootifulpodcast.desktop.client.ApiClient;
 import fm.bootifulpodcast.desktop.client.ApiConnectedEvent;
 import fm.bootifulpodcast.desktop.client.ApiDisconnectedEvent;
 import javafx.application.Platform;
@@ -83,6 +84,8 @@ public class UploadController {
 
 	private final AtomicBoolean connected = new AtomicBoolean();
 
+	private final ApiClient client;
+
 	private final MessageSource messageSource;
 
 	private final ImageView connectedImageView = imageViewForResource(
@@ -103,11 +106,12 @@ public class UploadController {
 	@FXML
 	public Label connectedIcon;
 
-	UploadController(Locale locale, ApplicationEventPublisher publisher,
+	UploadController(Locale locale, ApiClient client, ApplicationEventPublisher publisher,
 			MessageSource messageSource) {
 
 		var emptyArgs = new Object[0];
 
+		this.client = client;
 		this.locale = locale;
 		this.messageSource = messageSource;
 		this.publisher = publisher;
@@ -169,6 +173,7 @@ public class UploadController {
 						+ "interview media asset (%s) and a description: %s",
 				this.introductionFile.get().getAbsolutePath(),
 				this.interviewFile.get().getAbsolutePath(), this.description.getText()));
+
 	}
 
 	public void discardPodcast() {
