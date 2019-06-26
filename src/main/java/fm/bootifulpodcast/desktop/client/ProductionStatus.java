@@ -22,8 +22,10 @@ public class ProductionStatus {
 
 	private RestTemplate template;
 
-	public ProductionStatus(Executor ex, RestTemplate rt, String errMsg,
-			boolean published, String uid, HttpStatus status, URI statusUrl) {
+	public ProductionStatus(URI serverRootUrl, Executor ex, RestTemplate rt,
+			String errMsg, boolean published, String uid, HttpStatus status,
+			URI statusUrl) {
+
 		this.executor = ex;
 		this.template = rt;
 		this.uid = uid;
@@ -35,6 +37,7 @@ public class ProductionStatus {
 		this.statusUrl = statusUrl;
 		this.published = published;
 		this.httpStatus = status;
+		this.rootServerUrl = serverRootUrl;
 	}
 
 	public String getUid() {
@@ -65,7 +68,7 @@ public class ProductionStatus {
 
 	private HttpStatus httpStatus;
 
-	private URI statusUrl;
+	private URI statusUrl, rootServerUrl;
 
 	public CompletableFuture<URI> checkProductionStatus() {
 		Assert.notNull(this.executor, "the executor must not be null");
@@ -77,14 +80,15 @@ public class ProductionStatus {
 		var parameterizedTypeReference = new ParameterizedTypeReference<Map<String, String>>() {
 		};
 		while (true) {
-			var result = (this.template.exchange(this.statusUrl, HttpMethod.GET, null,
-					parameterizedTypeReference));
+			var result = this.template.exchange(this.statusUrl, HttpMethod.GET, null,
+					parameterizedTypeReference);
 			Assert.isTrue(result.getStatusCode().is2xxSuccessful(),
 					"the HTTP request must return a valid 20x series HTTP status");
 			var status = Objects.requireNonNull(result.getBody());
 			var key = "media-url";
 			if (status.containsKey(key)) {
-				return URI.create(status.get(key));
+				var uri = URI.create(status.get(key));
+				return uri;
 			}
 			else {
 				var seconds = 10;

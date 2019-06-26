@@ -14,20 +14,24 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,7 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Log4j2
 @Component
-public class UploadController {
+public class PodcastProductionController {
 
 	private final AtomicInteger rowCount = new AtomicInteger(0);
 
@@ -44,26 +48,9 @@ public class UploadController {
 
 	private final AtomicReference<File> interviewFile = new AtomicReference<>();
 
+	private final AtomicReference<Stage> stage = new AtomicReference<>();
+
 	private final Executor executor;
-
-	private final Locale locale;
-
-	@FXML
-	public Button newPodcast;
-
-	@FXML
-	public HBox buttons;
-
-	@FXML
-	public Button publish;
-
-	@FXML
-	public GridPane filesGridPane;
-
-	@FXML
-	public TextArea description;
-
-	private Label introductionLabel, interviewLabel;
 
 	private final String interviewDandDText;
 
@@ -88,9 +75,29 @@ public class UploadController {
 	private final ApiClient client;
 
 	private final Messages messages;
+
 	private final ImageView connectedImageView;
+
 	private final String hyperlinkText;
+
 	private final ImageView disconnectedImageView;
+
+	private final AtomicReference<URI> uri = new AtomicReference<>();
+
+	@FXML
+	public Button newPodcast;
+
+	@FXML
+	public HBox buttons;
+
+	@FXML
+	public Button publish;
+
+	@FXML
+	public GridPane filesGridPane;
+
+	@FXML
+	public TextArea description;
 
 	@FXML
 	public Label filePromptLabel;
@@ -104,26 +111,23 @@ public class UploadController {
 	@FXML
 	public Label connectedIcon;
 
+	private Label introductionLabel, interviewLabel;
+
 	private Hyperlink hyperlink;
 
-
-	UploadController(Locale locale, ApiClient client, Executor executor,
-																		ApplicationEventPublisher publisher, Messages messages) {
+	PodcastProductionController(ApiClient client, Executor executor,
+			ApplicationEventPublisher publisher, Messages messages) {
 
 		this.executor = executor;
 		this.client = client;
-		this.locale = locale;
 		this.messages = messages;
 		this.publisher = publisher;
 
-		// ImageViews
 		this.disconnectedImageView = this.imageViewForResource(
-			new ClassPathResource("images/disconnected-icon.png"));
+				new ClassPathResource("images/disconnected-icon.png"));
 		this.connectedImageView = this
-			.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
+				.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
 
-
-		// messages
 		this.publishButtonText = messages.getMessage("publish");
 		this.pleaseSpecifyAFileLabelText = messages.getMessage("no-file-specified");
 		this.newPodcastText = messages.getMessage("new-podcast");
@@ -133,12 +137,15 @@ public class UploadController {
 
 		var dropTheMediaOnThePanelBundleCode = "drop-the-media-on-the-panel";
 		this.introductionDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
-			this.introductionLabelText);
+				this.introductionLabelText);
 		this.interviewDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
-			this.interviewLabelText);
+				this.interviewLabelText);
 		this.hyperlinkText = messages.getMessage("production-media-is-done");
+	}
 
-
+	@EventListener
+	public void stageReady(StageReadyEvent stageReadyEvent) {
+		this.stage.set(stageReadyEvent.getSource());
 	}
 
 	@EventListener(FormManipulationEvent.class)
@@ -149,11 +156,9 @@ public class UploadController {
 	private void repaint() {
 		var text = this.description.getText();
 		var dirtyTracker = Arrays.asList(StringUtils.hasText(text.trim()),
-			this.interviewFile.get() != null, this.introductionFile.get() != null);
+				this.interviewFile.get() != null, this.introductionFile.get() != null);
 		var allMatch = dirtyTracker.stream().allMatch(p -> p);
-		log.info("are all forms set? " + allMatch);
 		var connected = this.connected.get();
-		log.debug("connected? " + connected);
 		var formFilledAndConnected = allMatch && connected;
 		this.publish.setDisable(!formFilledAndConnected);
 		this.newPodcast.setDisable(dirtyTracker.stream().noneMatch(p -> p));
@@ -165,8 +170,8 @@ public class UploadController {
 		}
 	}
 
-	private void updateFilePromptAfterDandD(Label fileLabel, String promptLabelText,
-																																									AtomicReference<File> fileAtomicReference, File file) {
+	private void updateFilePromptAfterDnD(Label fileLabel, String promptLabelText,
+			AtomicReference<File> fileAtomicReference, File file) {
 		fileAtomicReference.set(file);
 		fileLabel.setText(file.getAbsolutePath());
 		this.filePromptLabel.setText(promptLabelText);
@@ -174,10 +179,10 @@ public class UploadController {
 	}
 
 	private void handlePublish() {
-		log.info(String.format("ready to publish! we have an introduction media "
+		log.debug(String.format("ready to publish! we have an introduction media "
 				+ "asset (%s) and an interview media asset (%s) and a description: %s",
-			this.introductionFile.get().getAbsolutePath(),
-			this.interviewFile.get().getAbsolutePath(), this.description.getText()));
+				this.introductionFile.get().getAbsolutePath(),
+				this.interviewFile.get().getAbsolutePath(), this.description.getText()));
 
 		var uuid = UUID.randomUUID().toString();
 		var podcast = new PodcastArchiveBuilder(this.description.getText(), uuid);
@@ -185,28 +190,20 @@ public class UploadController {
 		var introductionFileExt = FileUtils.extensionFor(this.introductionFile.get());
 		Assert.notNull(interviewFileExt, "the interview extension must not be null");
 		Assert.notNull(introductionFileExt,
-			"the introduction extension must not be null");
+				"the introduction extension must not be null");
 		Assert.isTrue(interviewFileExt.equalsIgnoreCase(introductionFileExt),
-			"the introduction file type and the interview file type must be the same");
+				"the introduction file type and the interview file type must be the same");
 		var builder = podcast.addMedia(interviewFileExt, introductionFile.get(),
-			interviewFile.get());
+				interviewFile.get());
 		var archive = builder.build();
 		var productionStatus = this.client.beginProduction(uuid, archive);
-		productionStatus
-			.checkProductionStatus()
-			.thenAccept(this::handleProducedMediaURI);
+		productionStatus.checkProductionStatus().thenAccept(this::handleProducedMediaURI);
 	}
 
 	private void handleProducedMediaURI(URI uri) {
 		this.uri.set(uri);
-
-		Platform.runLater(() -> {
-			this.hyperlink.setText(this.hyperlinkText);
-
-		});
+		Platform.runLater(() -> this.hyperlink.setText(this.hyperlinkText));
 	}
-
-	private final AtomicReference<URI> uri = new AtomicReference<>();
 
 	private void discardPodcast() {
 		this.connectedIcon.setGraphic(this.connectedImageView);
@@ -239,11 +236,11 @@ public class UploadController {
 	public void initialize() {
 
 		this.publish
-			.setOnMouseClicked(mouseEvent -> executor.execute(this::handlePublish));
+				.setOnMouseClicked(mouseEvent -> executor.execute(this::handlePublish));
 		this.description.setOnKeyTyped(keyEvent -> this.repaint());
 		this.dropTarget.setOnDragOver(event -> {
 			if (event.getGestureSource() != this.dropTarget
-				&& event.getDragboard().hasFiles()) {
+					&& event.getDragboard().hasFiles()) {
 				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
 			}
 			event.consume();
@@ -254,15 +251,15 @@ public class UploadController {
 			if (eventDragboard.hasFiles()) {
 				var files = eventDragboard.getFiles();
 				Assert.isTrue(files != null && files.size() <= 1,
-					"there must be only one file");
+						"there must be only one file");
 				if (this.introductionFile.get() == null) {
-					this.updateFilePromptAfterDandD(this.introductionLabel,
-						this.introductionDandDText, this.introductionFile,
-						files.get(0));
+					this.updateFilePromptAfterDnD(this.introductionLabel,
+							this.introductionDandDText, this.introductionFile,
+							files.get(0));
 				}
 				else if (this.interviewFile.get() == null) {
-					this.updateFilePromptAfterDandD(this.interviewLabel,
-						this.interviewDandDText, this.interviewFile, files.get(0));
+					this.updateFilePromptAfterDnD(this.interviewLabel,
+							this.interviewDandDText, this.interviewFile, files.get(0));
 				}
 				success = true;
 			}
@@ -271,31 +268,46 @@ public class UploadController {
 		});
 		this.introductionLabel = this.newRow(this.nextRow(), this.introductionLabelText);
 		this.interviewLabel = this.newRow(this.nextRow(), this.interviewLabelText);
-		this.hyperlink = registerHyperlink();
+		this.hyperlink = this.registerHyperlink();
 		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
-
-		var file = new File(new File(System.getProperty("user.home")), "Desktop/result.mp3");
 		this.hyperlink.setOnAction(actionEvent -> {
+
 			var currentURI = uri.get();
 			Assert.notNull(currentURI, "the URI to download must not be null");
-			client.downloadUriToFile(currentURI, file);
+
+			var extFilter = new FileChooser.ExtensionFilter(
+					messages.getMessage("save-dialog-extension-filter-description"),
+					"*.mp3", "*.wav");
+			var fileChooser = new FileChooser();
+			fileChooser.getExtensionFilters().add(extFilter);
+
+			var stage = this.stage.get();
+			Assert.notNull(stage, "the stage must have been set");
+			var file = fileChooser.showSaveDialog(stage);
+			if (null != file) {
+				log.info("you've selected " + file.getAbsolutePath() + ".");
+				this.executor
+						.execute(() -> this.downloadMediaFileToFile(currentURI, file));
+			}
 		});
-
-
 		this.discardPodcast();
 	}
 
-	// todo change the download code so that the code downlaods using the S3 API
+	@SneakyThrows
+	private void downloadMediaFileToFile(URI mediaUri, File file) {
+		var urlResource = new UrlResource(mediaUri);
+		try (var inputStream = urlResource.getInputStream();
+				var outputStream = new FileOutputStream(file)) {
+			FileCopyUtils.copy(inputStream, outputStream);
+			log.debug("downloaded " + mediaUri.toString() + " to "
+					+ file.getAbsolutePath() + "!");
+		}
+	}
 
 	private Hyperlink registerHyperlink() {
 		var rowNumber = this.nextRow();
-		var description = new Label();
-		description.setText("Finished Media");
-
 		var hyperlink = new Hyperlink();
 		hyperlink.setPadding(new Insets(0, 0, 0, 10));
-
-		this.filesGridPane.add(description, 0, rowNumber, 1, 1);
 		this.filesGridPane.add(hyperlink, 1, rowNumber, 3, 1);
 		return hyperlink;
 	}
