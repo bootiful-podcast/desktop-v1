@@ -285,7 +285,7 @@ public class PodcastProductionController {
 			Assert.notNull(stage, "the stage must have been set");
 			var file = fileChooser.showSaveDialog(stage);
 			if (null != file) {
-				log.info("you've selected " + file.getAbsolutePath() + ".");
+				log.debug("you've selected " + file.getAbsolutePath() + ".");
 				this.executor
 						.execute(() -> this.downloadMediaFileToFile(currentURI, file));
 			}
