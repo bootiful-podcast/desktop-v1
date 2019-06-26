@@ -10,10 +10,9 @@
 
     <top>
         <VBox>
-
             <Label fx:id="descriptionLabel">
                 <padding>
-                    <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
+                    <Insets left="10.0" right="10.0" top="10.0"/>
                 </padding>
             </Label>
             <VBox>
@@ -22,8 +21,6 @@
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                 </padding>
             </VBox>
-
-
         </VBox>
     </top>
 
@@ -32,8 +29,8 @@
             <padding>
                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
             </padding>
-            <Label fx:id="filePromptLabel"></Label>
-            <GridPane fx:id="filesGridPane"></GridPane>
+            <Label fx:id="filePromptLabel"/>
+            <GridPane fx:id="filesGridPane"/>
         </VBox>
     </center>
     <bottom>

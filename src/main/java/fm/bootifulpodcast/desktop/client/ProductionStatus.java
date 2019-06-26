@@ -2,14 +2,18 @@ package fm.bootifulpodcast.desktop.client;
 
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 @Log4j2
 public class ProductionStatus {
@@ -70,20 +74,23 @@ public class ProductionStatus {
 
 	@SneakyThrows
 	private URI doPollProductionStatus() {
+		var parameterizedTypeReference = new ParameterizedTypeReference<Map<String, String>>() {
+		};
 		while (true) {
-			var result = this.template.getForEntity(this.statusUrl, Map.class);
+			var result = (this.template.exchange(this.statusUrl, HttpMethod.GET, null,
+					parameterizedTypeReference));
 			Assert.isTrue(result.getStatusCode().is2xxSuccessful(),
 					"the HTTP request must return a valid 20x series HTTP status");
-			var status = (Map<String, String>) result.getBody();
+			var status = Objects.requireNonNull(result.getBody());
 			var key = "media-url";
 			if (status.containsKey(key)) {
 				return URI.create(status.get(key));
 			}
 			else {
 				var seconds = 10;
-				Thread.sleep(seconds * 1000);
+				TimeUnit.SECONDS.sleep(seconds);
 				log.debug("sleeping " + seconds
-						+ "s while checking the requestProductionStatus of '" + statusUrl
+						+ "s while checking the production status at '" + this.statusUrl
 						+ "'.");
 			}
 		}

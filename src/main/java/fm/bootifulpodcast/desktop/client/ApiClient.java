@@ -1,19 +1,25 @@
 package fm.bootifulpodcast.desktop.client;
 
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
@@ -35,7 +41,7 @@ public class ApiClient {
 	private final String serverUrl, actuatorUrl;
 
 	public ApiClient(String serverUrl, ScheduledExecutorService executor,
-			ApplicationEventPublisher publisher, RestTemplate restTemplate) {
+																		ApplicationEventPublisher publisher, RestTemplate restTemplate) {
 
 		this.executor = executor;
 		this.restTemplate = restTemplate;
@@ -43,29 +49,29 @@ public class ApiClient {
 
 		Assert.hasText(serverUrl, "the server URL provided is null");
 		this.serverUrl = serverUrl.endsWith("/")
-				? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+			? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
 		this.actuatorUrl = this.serverUrl + "/actuator/health";
 
 		log.debug("the server URL is " + this.serverUrl + " and the actuator URL is "
-				+ this.actuatorUrl);
+			+ this.actuatorUrl);
 
 		this.executor.scheduleAtFixedRate(this::monitorConnectedEndpoint, 0, 5,
-				TimeUnit.SECONDS);
+			TimeUnit.SECONDS);
 	}
 
 	private void monitorConnectedEndpoint() {
 		try {
 			log.debug("contacting the following endpoint to "
-					+ "verify that we're connected to " + this.serverUrl);
+				+ "verify that we're connected to " + this.serverUrl);
 			var typeReference = new ParameterizedTypeReference<Map<String, Object>>() {
 			};
 			var entity = this.restTemplate.exchange(this.actuatorUrl, HttpMethod.GET,
-					HttpEntity.EMPTY, typeReference);
+				HttpEntity.EMPTY, typeReference);
 			var body = entity.getBody();
 			var jsonMap = Objects.requireNonNull(body);
 			var status = (String) jsonMap.get("status");
 			var isActuatorHealthy = entity.getStatusCode().is2xxSuccessful()
-					&& status.equalsIgnoreCase("UP");
+				&& status.equalsIgnoreCase("UP");
 			var existingConnectedStatus = this.connected.get();
 			if (existingConnectedStatus != isActuatorHealthy) {
 				this.connected.set(isActuatorHealthy);
@@ -97,8 +103,19 @@ public class ApiClient {
 		URI location = response.getHeaders().getLocation();
 		Assert.notNull(location, "the location URI must be non-null");
 		return new ProductionStatus(this.executor, this.restTemplate, null, good, uid,
-				response.getStatusCode(),
-				URI.create(this.serverUrl + location.getPath()));
+			response.getStatusCode(),
+			URI.create(this.serverUrl + location.getPath()));
+	}
+
+	@SneakyThrows
+	public void downloadUriToFile(URI uri, File file) {
+		log.info("downloading " + uri.toString() + " to "+ file.getAbsolutePath());
+		var urlResource = new UrlResource(uri.toString());
+		try (var in = new BufferedInputStream(urlResource.getInputStream());
+							var out = new BufferedOutputStream(new FileOutputStream(file))) {
+			FileCopyUtils.copy(in, out);
+		}
+		Assert.isTrue(file.exists(), "the resulting file could not be downloaded");
 	}
 
 }
