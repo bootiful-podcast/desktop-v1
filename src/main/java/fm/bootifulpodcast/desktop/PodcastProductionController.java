@@ -12,7 +12,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.SneakyThrows;
@@ -63,8 +63,11 @@ public class PodcastProductionController {
 	private final String interviewLabelText;
 
 	private final String descriptionLabelText;
+
 	private final String pleaseChooseFileLabelText;
+
 	private final String introductionLabelText;
+
 	private final String newPodcastText;
 
 	private final ApplicationEventPublisher publisher;
@@ -77,22 +80,25 @@ public class PodcastProductionController {
 
 	private final ImageView connectedImageView;
 
-
 	private final ImageView disconnectedImageView;
 
 	private final AtomicReference<URI> uri = new AtomicReference<>();
 
-
 	@FXML
 	public Label introLabel;
+
 	@FXML
 	public Label interviewLabel;
+
 	@FXML
 	public Label introFileLabel;
+
 	@FXML
 	public Label interviewFileLabel;
+
 	@FXML
 	public Button introFileChooserButton;
+
 	@FXML
 	public Button interviewFileChooserButton;
 
@@ -118,7 +124,7 @@ public class PodcastProductionController {
 	public Label descriptionPromptLabel;
 
 	@FXML
-	public Node form;
+	public VBox form;
 
 	@FXML
 	public Label connectedIcon;
@@ -127,7 +133,7 @@ public class PodcastProductionController {
 	public Node formIsProcessing;
 
 	@FXML
-	public Pane rootPane;
+	public VBox rootPane;
 
 	PodcastProductionController(ApiClient client, Executor executor,
 																													ApplicationEventPublisher publisher, Messages messages) {
@@ -137,8 +143,10 @@ public class PodcastProductionController {
 		this.messages = messages;
 		this.publisher = publisher;
 
-		this.disconnectedImageView = this.imageViewForResource(new ClassPathResource("images/disconnected-icon.png"));
-		this.connectedImageView = this.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
+		this.disconnectedImageView = this.imageViewForResource(
+			new ClassPathResource("images/disconnected-icon.png"));
+		this.connectedImageView = this
+			.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
 
 		this.pleaseChooseFileLabelText = messages.getMessage("choose-a-file");
 		this.publishButtonText = messages.getMessage("publish");
@@ -190,7 +198,6 @@ public class PodcastProductionController {
 		this.publisher.publishEvent(new FormManipulationEvent(file));
 	}
 
-
 	private void handlePublish() {
 		var introFile = this.introductionFile.get();
 		var interviewFile = this.interviewFile.get();
@@ -199,15 +206,16 @@ public class PodcastProductionController {
 
 		log.debug(String.format("ready to publish! we have an introduction media "
 				+ "asset (%s) and an interview media asset (%s) and a description: %s and a UID: %s",
-			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(), descriptionText, uuid));
+			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(),
+			descriptionText, uuid));
 
 		Platform.runLater(this::showProcessing);
 
 		// todo hotel wifi is garbage. so, instead of actually hitting
-		//  the microservice on my local computer, i'm gonna spin up
-		//  an async thread and call the same method with the callback
-		//  just to allow me to get on with the work of fixing the UI
-		//  once the publish button is submitted.
+		// the microservice on my local computer, i'm gonna spin up
+		// an async thread and call the same method with the callback
+		// just to allow me to get on with the work of fixing the UI
+		// once the publish button is submitted.
 		var ui = true;
 		if (ui)
 			this.executor.execute(new Runnable() {
@@ -217,7 +225,8 @@ public class PodcastProductionController {
 				public void run() {
 					log.info("fake async thing to take up time so the UI can fade out");
 					Thread.sleep(5_000);
-					handleProducedMediaURI(URI.create("http://localhost:8080/podcasts/526fdf4e-3747-4ff9-b423-c981405f10f0/output"));
+					handleProducedMediaURI(URI.create(
+						"http://localhost:8080/podcasts/526fdf4e-3747-4ff9-b423-c981405f10f0/output"));
 				}
 			});
 
@@ -234,7 +243,8 @@ public class PodcastProductionController {
 			var builder = podcast.addMedia(interviewFileExt, introFile, interviewFile);
 			var archive = builder.build();
 			var productionStatus = this.client.beginProduction(uuid, archive);
-			productionStatus.checkProductionStatus().thenAccept(this::handleProducedMediaURI);
+			productionStatus.checkProductionStatus()
+				.thenAccept(this::handleProducedMediaURI);
 		}
 	}
 
@@ -263,7 +273,6 @@ public class PodcastProductionController {
 	}
 
 	private void discardPodcast() {
-
 
 		this.connectedIcon.setGraphic(this.connectedImageView);
 		this.newPodcast.setText(this.newPodcastText);
@@ -303,9 +312,8 @@ public class PodcastProductionController {
 	@FXML
 	@SneakyThrows
 	public void initialize() {
-
-		this.publish
-			.setOnMouseClicked(mouseEvent -> this.executor.execute(this::handlePublish));
+		this.publish.setOnMouseClicked(
+			mouseEvent -> this.executor.execute(this::handlePublish));
 		this.description.setOnKeyTyped(keyEvent -> this.repaint());
 		this.form.setOnDragOver(event -> {
 			if (event.getGestureSource() != this.form
@@ -333,31 +341,32 @@ public class PodcastProductionController {
 			event.consume();
 		});
 
-
-		this.configureRow(this.introductionLabelText, this.introLabel, this.introFileChooserButton, this::updateIntroductionFile);
-		this.configureRow(this.interviewLabelText, this.interviewLabel, this.interviewFileChooserButton, this::updateInterviewFile);
+		this.configureRow(this.introductionLabelText, this.introLabel,
+			this.introFileChooserButton, this::updateIntroductionFile);
+		this.configureRow(this.interviewLabelText, this.interviewLabel,
+			this.interviewFileChooserButton, this::updateInterviewFile);
 		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
-
 
 		this.discardPodcast();
 
-		//todo remove this!!!! it's only for development
+		// todo remove this!!!! it's only for development
 		if (true) {
 
-			this.loadPodcastForm(new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
-				new File("/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"),
+			this.loadPodcastForm(
+				new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
+				new File(
+					"/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"),
 				"In this interview Josh Long (@starbuxman) talks to Oleg Zhurakousky.");
 		}
 	}
-
 
 	private void showFileChooserAndDownloadURI() {
 		var currentURI = uri.get();
 		Assert.notNull(currentURI, "the URI to download must not be null");
 
 		var extFilter = new FileChooser.ExtensionFilter(
-			messages.getMessage("save-dialog-extension-filter-description"),
-			"*.mp3", "*.wav");
+			messages.getMessage("save-dialog-extension-filter-description"), "*.mp3",
+			"*.wav");
 		var fileChooser = new FileChooser();
 		fileChooser.getExtensionFilters().add(extFilter);
 
@@ -377,12 +386,13 @@ public class PodcastProductionController {
 	}
 
 	private void updateIntroductionFile(File intro) {
-		this.updateFilePromptAfterDnD(this.introFileLabel,
-			this.introductionDandDText, this.introductionFile, intro);
+		this.updateFilePromptAfterDnD(this.introFileLabel, this.introductionDandDText,
+			this.introductionFile, intro);
 	}
 
 	private void updateInterviewFile(File file) {
-		this.updateFilePromptAfterDnD(this.interviewFileLabel, this.interviewDandDText, this.interviewFile, file);
+		this.updateFilePromptAfterDnD(this.interviewFileLabel, this.interviewDandDText,
+			this.interviewFile, file);
 	}
 
 	@SneakyThrows
@@ -396,7 +406,8 @@ public class PodcastProductionController {
 		}
 	}
 
-	private void configureRow(String introductionLabelText, Label introLabel, Button introFileChooserButton, Consumer<File> fileSelected) {
+	private void configureRow(String introductionLabelText, Label introLabel,
+																											Button introFileChooserButton, Consumer<File> fileSelected) {
 		introLabel.setText(introductionLabelText);
 		introFileChooserButton.setOnMouseClicked(mouseEvent -> {
 			var fileChooser = new FileChooser();
