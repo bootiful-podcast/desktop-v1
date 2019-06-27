@@ -11,9 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.net.SocketException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
@@ -33,9 +35,10 @@ public class ApiClient {
 	private final ApplicationEventPublisher publisher;
 
 	private final String serverUrl, actuatorUrl;
+	private final int monitorDelayInSeconds = 10;
 
 	public ApiClient(String serverUrl, ScheduledExecutorService executor,
-			ApplicationEventPublisher publisher, RestTemplate restTemplate) {
+																		ApplicationEventPublisher publisher, RestTemplate restTemplate) {
 
 		this.executor = executor;
 		this.restTemplate = restTemplate;
@@ -43,36 +46,38 @@ public class ApiClient {
 
 		Assert.hasText(serverUrl, "the server URL provided is null");
 		this.serverUrl = serverUrl.endsWith("/")
-				? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+			? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
 		this.actuatorUrl = this.serverUrl + "/actuator/health";
 
 		log.debug("the server URL is " + this.serverUrl + " and the actuator URL is "
-				+ this.actuatorUrl);
+			+ this.actuatorUrl);
 
-		this.executor.scheduleAtFixedRate(this::monitorConnectedEndpoint, 0, 5,
-				TimeUnit.SECONDS);
+		this.executor.scheduleWithFixedDelay(this::monitorConnectedEndpoint, 0, this.monitorDelayInSeconds,
+			TimeUnit.SECONDS);
 	}
 
 	private void monitorConnectedEndpoint() {
 		try {
 			log.debug("contacting the following endpoint to "
-					+ "verify that we're connected to " + this.serverUrl);
+				+ "verify that we're connected to " + this.serverUrl);
 			var typeReference = new ParameterizedTypeReference<Map<String, Object>>() {
 			};
 			var entity = this.restTemplate.exchange(this.actuatorUrl, HttpMethod.GET,
-					HttpEntity.EMPTY, typeReference);
+				HttpEntity.EMPTY, typeReference);
 			var body = entity.getBody();
 			var jsonMap = Objects.requireNonNull(body);
 			var status = (String) jsonMap.get("status");
 			var isActuatorHealthy = entity.getStatusCode().is2xxSuccessful()
-					&& status.equalsIgnoreCase("UP");
+				&& status.equalsIgnoreCase("UP");
 			var existingConnectedStatus = this.connected.get();
 			if (existingConnectedStatus != isActuatorHealthy) {
 				this.connected.set(isActuatorHealthy);
 			}
 		}
 		catch (Exception e) {
-			log.warn(e);
+			if (e instanceof ResourceAccessException || e instanceof SocketException) {
+				log.debug("couldn't connect to " + this.actuatorUrl);
+			}
 			this.connected.set(false);
 		}
 
@@ -97,8 +102,8 @@ public class ApiClient {
 		var location = response.getHeaders().getLocation();
 		Assert.notNull(location, "the location URI must be non-null");
 		return new ProductionStatus(URI.create(this.serverUrl), this.executor,
-				this.restTemplate, null, good, uid, response.getStatusCode(),
-				URI.create(this.serverUrl + location.getPath()));
+			this.restTemplate, null, good, uid, response.getStatusCode(),
+			URI.create(this.serverUrl + location.getPath()));
 	}
 
 }

@@ -57,10 +57,10 @@
                 </GridPane>
             </VBox>
 
-            <VBox fx:id="formIsProcessing">
-                <Label text="Processing..."/>
+            <VBox fx:id="formIsProcessing" alignment="CENTER">
+                <Label text="Processing..." fx:id="processingLabel"
+                       textAlignment="CENTER"/>
             </VBox>
-
         </VBox>
     </center>
     <bottom>

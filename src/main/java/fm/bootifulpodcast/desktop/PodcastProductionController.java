@@ -4,6 +4,7 @@ import fm.bootifulpodcast.desktop.client.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -63,8 +64,6 @@ public class PodcastProductionController {
 	private final String interviewLabelText;
 
 	private final String descriptionLabelText;
-
-	private final String pleaseChooseFileLabelText;
 
 	private final String introductionLabelText;
 
@@ -135,6 +134,9 @@ public class PodcastProductionController {
 	@FXML
 	public VBox rootPane;
 
+	@FXML
+	public Label processingLabel;
+
 	PodcastProductionController(ApiClient client, Executor executor,
 																													ApplicationEventPublisher publisher, Messages messages) {
 
@@ -148,7 +150,6 @@ public class PodcastProductionController {
 		this.connectedImageView = this
 			.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
 
-		this.pleaseChooseFileLabelText = messages.getMessage("choose-a-file");
 		this.publishButtonText = messages.getMessage("publish");
 		this.pleaseSpecifyAFileLabelText = messages.getMessage("no-file-specified");
 		this.newPodcastText = messages.getMessage("new-podcast");
@@ -202,21 +203,21 @@ public class PodcastProductionController {
 		var introFile = this.introductionFile.get();
 		var interviewFile = this.interviewFile.get();
 		var descriptionText = this.description.getText();
+
 		var uuid = UUID.randomUUID().toString();
 
 		log.debug(String.format("ready to publish! we have an introduction media "
 				+ "asset (%s) and an interview media asset (%s) and a description: %s and a UID: %s",
-			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(),
-			descriptionText, uuid));
+			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(), descriptionText, uuid));
 
 		Platform.runLater(this::showProcessing);
 
 		// todo hotel wifi is garbage. so, instead of actually hitting
-		// the microservice on my local computer, i'm gonna spin up
-		// an async thread and call the same method with the callback
-		// just to allow me to get on with the work of fixing the UI
-		// once the publish button is submitted.
-		var ui = true;
+		//  the microservice on my local computer, i'm gonna spin up
+		//  an async thread and call the same method with the callback
+		//  just to allow me to get on with the work of fixing the UI
+		//  once the publish button is submitted.
+		var ui = false;
 		if (ui)
 			this.executor.execute(new Runnable() {
 
@@ -242,8 +243,9 @@ public class PodcastProductionController {
 				"the introduction file type and the interview file type must be the same");
 			var builder = podcast.addMedia(interviewFileExt, introFile, interviewFile);
 			var archive = builder.build();
-			var productionStatus = this.client.beginProduction(uuid, archive);
-			productionStatus.checkProductionStatus()
+			this.client
+				.beginProduction(uuid, archive)
+				.checkProductionStatus()//
 				.thenAccept(this::handleProducedMediaURI);
 		}
 	}
@@ -251,6 +253,7 @@ public class PodcastProductionController {
 	private void handleProducedMediaURI(URI uri) {
 		log.debug("URI for the media has returned " + uri.toString());
 		this.uri.set(uri);
+		this.showFileChooserAndDownloadURI(uri);
 	}
 
 	private void updateDescription(String descriptionLabelText) {
@@ -346,11 +349,11 @@ public class PodcastProductionController {
 		this.configureRow(this.interviewLabelText, this.interviewLabel,
 			this.interviewFileChooserButton, this::updateInterviewFile);
 		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
-
+		this.processingLabel.setText(messages.getMessage("processing-status"));
 		this.discardPodcast();
 
 		// todo remove this!!!! it's only for development
-		if (true) {
+		if (false) {
 
 			this.loadPodcastForm(
 				new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
@@ -360,23 +363,25 @@ public class PodcastProductionController {
 		}
 	}
 
-	private void showFileChooserAndDownloadURI() {
-		var currentURI = uri.get();
+	private void showFileChooserAndDownloadURI(URI currentURI) {
 		Assert.notNull(currentURI, "the URI to download must not be null");
 
-		var extFilter = new FileChooser.ExtensionFilter(
-			messages.getMessage("save-dialog-extension-filter-description"), "*.mp3",
-			"*.wav");
-		var fileChooser = new FileChooser();
-		fileChooser.getExtensionFilters().add(extFilter);
+		Platform.runLater(() -> {
+			var extFilter = new FileChooser.ExtensionFilter(
+				messages.getMessage("save-dialog-extension-filter-description"), "*.mp3",
+				"*.wav");
+			var fileChooser = new FileChooser();
+			fileChooser.getExtensionFilters().add(extFilter);
+			var stage = this.stage.get();
+			Assert.notNull(stage, "the stage must have been set");
+			var file = fileChooser.showSaveDialog(stage);
+			if (null != file) {
+				log.debug("you've selected " + file.getAbsolutePath() + ".");
+				this.executor.execute(() -> this.downloadMediaFileToFile(currentURI, file));
+			}
 
-		var stage = this.stage.get();
-		Assert.notNull(stage, "the stage must have been set");
-		var file = fileChooser.showSaveDialog(stage);
-		if (null != file) {
-			log.debug("you've selected " + file.getAbsolutePath() + ".");
-			this.executor.execute(() -> this.downloadMediaFileToFile(currentURI, file));
-		}
+		});
+
 	}
 
 	private void loadPodcastForm(File mainIntro, File mainInterview, String description) {
@@ -401,9 +406,16 @@ public class PodcastProductionController {
 		try (var inputStream = urlResource.getInputStream();
 							var outputStream = new FileOutputStream(file)) {
 			FileCopyUtils.copy(inputStream, outputStream);
-			log.debug("downloaded " + mediaUri.toString() + " to "
-				+ file.getAbsolutePath() + "!");
+			log.debug("downloaded " + mediaUri.toString() + " to " + file.getAbsolutePath() + "!");
 		}
+
+		Platform.runLater(() -> {
+			var alert = new Alert(Alert.AlertType.INFORMATION);
+			alert.setTitle(messages.getMessage("file-done-alert-title"));
+			alert.setHeaderText(null);
+			alert.setContentText(messages.getMessage("file-done-alert-message", file.getAbsolutePath()));
+			alert.showAndWait();
+		});
 	}
 
 	private void configureRow(String introductionLabelText, Label introLabel,
