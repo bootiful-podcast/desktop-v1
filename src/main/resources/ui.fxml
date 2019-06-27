@@ -1,56 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
-            fx:id="dropTarget"
             xmlns="http://javafx.com/javafx/8.0.999-ea"
             fx:controller="fm.bootifulpodcast.desktop.PodcastProductionController">
 
-    <top>
-        <VBox>
-            <Label fx:id="descriptionLabel">
-                <padding>
-                    <Insets left="10.0" right="10.0" top="10.0"/>
-                </padding>
-            </Label>
-            <VBox>
-                <TextArea fx:id="description" wrapText="true" maxHeight="80"/>
-                <padding>
-                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
-                </padding>
-            </VBox>
-        </VBox>
-    </top>
 
     <center>
-        <VBox spacing="10">
+        <VBox fx:id="form" spacing="10">
+
             <padding>
                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
             </padding>
-            <Label fx:id="filePromptLabel"/>
-            <GridPane fx:id="filesGridPane"/>
+
+            <Label fx:id="descriptionPromptLabel" text="give a description"/>
+            <TextArea fx:id="description" maxHeight="80" wrapText="true"/>
+
+            <Label fx:id="filePromptLabel" text="choose a file"/>
+            <GridPane fx:id="filesGridPane" hgap="10" vgap="10">
+
+
+                <Label fx:id="introLabel" contentDisplay="RIGHT"
+                       text="Introduction" textAlignment="RIGHT"
+                       GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Button fx:id="introFileChooserButton" text="Choose File"
+                        GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <Label fx:id="introFileLabel"
+                       text="/Users/jlong/some/other/intro.mp3"
+                       GridPane.columnIndex="2" GridPane.fillWidth="3"
+                       GridPane.rowIndex="0"/>
+
+                <Label fx:id="interviewLabel" alignment="CENTER_RIGHT"
+                       contentDisplay="RIGHT" text="Interview"
+                       textAlignment="RIGHT" GridPane.columnIndex="0"
+                       GridPane.rowIndex="1"/>
+                <Button fx:id="interviewFileChooserButton"
+                        text="Choose File" GridPane.columnIndex="1"
+                        GridPane.rowIndex="1"/>
+                <Label fx:id="interviewFileLabel"
+                       text="/Users/jlong/some/other/interview.mp3"
+                       GridPane.columnIndex="2" GridPane.fillWidth="3"
+                       GridPane.rowIndex="1"/>
+                <columnConstraints>
+                    <ColumnConstraints/>
+                    <ColumnConstraints/>
+                    <ColumnConstraints/>
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints/>
+                    <RowConstraints/>
+                </rowConstraints>
+            </GridPane>
         </VBox>
+
+        <HBox fx:id="formIsProcessing">
+            <Label text="Processing..."/>
+        </HBox>
+
+        <Pane fx:id="rootPane"/>
     </center>
     <bottom>
-        <BorderPane style="-fx-background-color: #336699">
-            <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
-            </padding>
-            <left>
-                <Label fx:id="connectedIcon">
-                    <padding>
-                        <Insets right="10.0"/>
-                    </padding>
-                </Label>
-            </left>
-            <right>
-                <HBox fx:id="buttons" spacing="10" alignment="CENTER_RIGHT">
-                    <Button fx:id="newPodcast"/>
-                    <Button fx:id="publish" disable="true"/>
-                </HBox>
-            </right>
-        </BorderPane>
+        <VBox>
+            <BorderPane style="-fx-background-color: #336699">
+                <padding>
+                    <Insets bottom="10.0" left="10.0" right="10.0"
+                            top="10.0"/>
+                </padding>
+                <left>
+                    <Label fx:id="connectedIcon">
+                        <padding>
+                            <Insets right="10.0"/>
+                        </padding>
+                    </Label>
+                </left>
+                <right>
+                    <HBox fx:id="buttons" alignment="CENTER_RIGHT"
+                          spacing="10">
+                        <Button fx:id="newPodcast" text="New Podcast"/>
+                        <Button fx:id="publish" disable="true"
+                                text="Publish"/>
+                    </HBox>
+                </right>
+            </BorderPane>
+        </VBox>
     </bottom>
 </BorderPane>
+
+

@@ -3,10 +3,8 @@ package fm.bootifulpodcast.desktop;
 import fm.bootifulpodcast.desktop.client.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
@@ -14,6 +12,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.SneakyThrows;
@@ -78,11 +77,24 @@ public class PodcastProductionController {
 
 	private final ImageView connectedImageView;
 
-	private final String hyperlinkText;
 
 	private final ImageView disconnectedImageView;
 
 	private final AtomicReference<URI> uri = new AtomicReference<>();
+
+
+	@FXML
+	public Label introLabel;
+	@FXML
+	public Label interviewLabel;
+	@FXML
+	public Label introFileLabel;
+	@FXML
+	public Label interviewFileLabel;
+	@FXML
+	public Button introFileChooserButton;
+	@FXML
+	public Button interviewFileChooserButton;
 
 	@FXML
 	public Button newPodcast;
@@ -103,20 +115,19 @@ public class PodcastProductionController {
 	public Label filePromptLabel;
 
 	@FXML
-	public Label descriptionLabel;
+	public Label descriptionPromptLabel;
 
 	@FXML
-	public Node dropTarget;
+	public Node form;
 
 	@FXML
 	public Label connectedIcon;
 
-	private Label introductionLabel, interviewLabel;
+	@FXML
+	public Node formIsProcessing;
 
-	private Hyperlink hyperlink;
-
-	private final int padding = 10;
-
+	@FXML
+	public Pane rootPane;
 
 	PodcastProductionController(ApiClient client, Executor executor,
 																													ApplicationEventPublisher publisher, Messages messages) {
@@ -126,10 +137,8 @@ public class PodcastProductionController {
 		this.messages = messages;
 		this.publisher = publisher;
 
-		this.disconnectedImageView = this.imageViewForResource(
-			new ClassPathResource("images/disconnected-icon.png"));
-		this.connectedImageView = this
-			.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
+		this.disconnectedImageView = this.imageViewForResource(new ClassPathResource("images/disconnected-icon.png"));
+		this.connectedImageView = this.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
 
 		this.pleaseChooseFileLabelText = messages.getMessage("choose-a-file");
 		this.publishButtonText = messages.getMessage("publish");
@@ -144,7 +153,6 @@ public class PodcastProductionController {
 			this.introductionLabelText);
 		this.interviewDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
 			this.interviewLabelText);
-		this.hyperlinkText = messages.getMessage("production-media-is-done");
 	}
 
 	@EventListener
@@ -182,6 +190,7 @@ public class PodcastProductionController {
 		this.publisher.publishEvent(new FormManipulationEvent(file));
 	}
 
+
 	private void handlePublish() {
 		var introFile = this.introductionFile.get();
 		var interviewFile = this.interviewFile.get();
@@ -191,6 +200,8 @@ public class PodcastProductionController {
 		log.debug(String.format("ready to publish! we have an introduction media "
 				+ "asset (%s) and an interview media asset (%s) and a description: %s and a UID: %s",
 			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(), descriptionText, uuid));
+
+		Platform.runLater(this::showProcessing);
 
 		// todo hotel wifi is garbage. so, instead of actually hitting
 		//  the microservice on my local computer, i'm gonna spin up
@@ -230,7 +241,6 @@ public class PodcastProductionController {
 	private void handleProducedMediaURI(URI uri) {
 		log.debug("URI for the media has returned " + uri.toString());
 		this.uri.set(uri);
-		Platform.runLater(() -> this.hyperlink.setText(this.hyperlinkText));
 	}
 
 	private void updateDescription(String descriptionLabelText) {
@@ -238,8 +248,23 @@ public class PodcastProductionController {
 		this.repaint();
 	}
 
+	private void showForm() {
+		this.showNewScreenInPane(this.form);
+	}
+
+	private void showNewScreenInPane(Node node) {
+		hideEverything();
+		this.rootPane.getChildren().add(node);
+		node.setVisible(true);
+	}
+
+	private void showProcessing() {
+		showNewScreenInPane(this.formIsProcessing);
+	}
 
 	private void discardPodcast() {
+
+
 		this.connectedIcon.setGraphic(this.connectedImageView);
 		this.newPodcast.setText(this.newPodcastText);
 		this.publish.setText(this.publishButtonText);
@@ -248,10 +273,20 @@ public class PodcastProductionController {
 		this.description.setText("");
 		this.interviewFile.set(null);
 		this.introductionFile.set(null);
-		this.interviewLabel.setText(this.pleaseSpecifyAFileLabelText);
-		this.introductionLabel.setText(this.pleaseSpecifyAFileLabelText);
-		this.descriptionLabel.setText(this.descriptionLabelText);
+		this.interviewLabel.setText(this.interviewLabelText);
+		this.introFileLabel.setText(this.introductionLabelText);
+		this.interviewFileLabel.setText(this.pleaseSpecifyAFileLabelText);
+		this.introFileLabel.setText(this.pleaseSpecifyAFileLabelText);
+		this.descriptionPromptLabel.setText(this.descriptionLabelText);
 		this.newPodcast.setDisable(true);
+
+		this.showForm();
+	}
+
+	private void hideEverything() {
+		this.formIsProcessing.setVisible(false);
+		this.form.setVisible(false);
+		this.rootPane.getChildren().clear();
 	}
 
 	@SneakyThrows
@@ -270,16 +305,16 @@ public class PodcastProductionController {
 	public void initialize() {
 
 		this.publish
-			.setOnMouseClicked(mouseEvent -> executor.execute(this::handlePublish));
+			.setOnMouseClicked(mouseEvent -> this.executor.execute(this::handlePublish));
 		this.description.setOnKeyTyped(keyEvent -> this.repaint());
-		this.dropTarget.setOnDragOver(event -> {
-			if (event.getGestureSource() != this.dropTarget
+		this.form.setOnDragOver(event -> {
+			if (event.getGestureSource() != this.form
 				&& event.getDragboard().hasFiles()) {
 				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
 			}
 			event.consume();
 		});
-		this.dropTarget.setOnDragDropped(event -> {
+		this.form.setOnDragDropped(event -> {
 			var eventDragboard = event.getDragboard();
 			var success = false;
 			if (eventDragboard.hasFiles()) {
@@ -298,56 +333,56 @@ public class PodcastProductionController {
 			event.consume();
 		});
 
-		this.introductionLabel = this.newRow(this.introductionLabelText, this::updateIntroductionFile);
-		this.interviewLabel = this.newRow(this.interviewLabelText, this::updateInterviewFile);
-		this.hyperlink = this.registerHyperlink();
+
+		this.configureRow(this.introductionLabelText, this.introLabel, this.introFileChooserButton, this::updateIntroductionFile);
+		this.configureRow(this.interviewLabelText, this.interviewLabel, this.interviewFileChooserButton, this::updateInterviewFile);
 		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
-		this.hyperlink.setOnAction(actionEvent -> {
 
-			var currentURI = uri.get();
-			Assert.notNull(currentURI, "the URI to download must not be null");
-
-			var extFilter = new FileChooser.ExtensionFilter(
-				messages.getMessage("save-dialog-extension-filter-description"),
-				"*.mp3", "*.wav");
-			var fileChooser = new FileChooser();
-			fileChooser.getExtensionFilters().add(extFilter);
-
-			var stage = this.stage.get();
-			Assert.notNull(stage, "the stage must have been set");
-			var file = fileChooser.showSaveDialog(stage);
-			if (null != file) {
-				log.debug("you've selected " + file.getAbsolutePath() + ".");
-				this.executor
-					.execute(() -> this.downloadMediaFileToFile(currentURI, file));
-			}
-		});
-
-		this.filesGridPane.setVgap(this.padding);
-		this.filesGridPane.setHgap(this.padding);
 
 		this.discardPodcast();
 
 		//todo remove this!!!! it's only for development
-		if (false)
+		if (true) {
+
 			this.loadPodcastForm(new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
-				new File("/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"), "In this interview Josh Long (@starbuxman) talks to Oleg Zhurakousky.");
+				new File("/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"),
+				"In this interview Josh Long (@starbuxman) talks to Oleg Zhurakousky.");
+		}
 	}
 
-	private void loadPodcastForm(File intro, File interview, String desc) {
-		this.updateIntroductionFile(intro);
-		this.updateInterviewFile(interview);
-		this.updateDescription(desc);
+
+	private void showFileChooserAndDownloadURI() {
+		var currentURI = uri.get();
+		Assert.notNull(currentURI, "the URI to download must not be null");
+
+		var extFilter = new FileChooser.ExtensionFilter(
+			messages.getMessage("save-dialog-extension-filter-description"),
+			"*.mp3", "*.wav");
+		var fileChooser = new FileChooser();
+		fileChooser.getExtensionFilters().add(extFilter);
+
+		var stage = this.stage.get();
+		Assert.notNull(stage, "the stage must have been set");
+		var file = fileChooser.showSaveDialog(stage);
+		if (null != file) {
+			log.debug("you've selected " + file.getAbsolutePath() + ".");
+			this.executor.execute(() -> this.downloadMediaFileToFile(currentURI, file));
+		}
+	}
+
+	private void loadPodcastForm(File mainIntro, File mainInterview, String description) {
+		this.updateIntroductionFile(mainIntro);
+		this.updateInterviewFile(mainInterview);
+		this.updateDescription(description);
 	}
 
 	private void updateIntroductionFile(File intro) {
-		this.updateFilePromptAfterDnD(this.introductionLabel,
+		this.updateFilePromptAfterDnD(this.introFileLabel,
 			this.introductionDandDText, this.introductionFile, intro);
 	}
 
 	private void updateInterviewFile(File file) {
-		this.updateFilePromptAfterDnD(this.interviewLabel,
-			this.interviewDandDText, this.interviewFile, file);
+		this.updateFilePromptAfterDnD(this.interviewFileLabel, this.interviewDandDText, this.interviewFile, file);
 	}
 
 	@SneakyThrows
@@ -361,41 +396,15 @@ public class PodcastProductionController {
 		}
 	}
 
-	private Hyperlink registerHyperlink() {
-		var rowNumber = this.nextRow();
-		var hyperlink = new Hyperlink();
-		hyperlink.setPadding(new Insets(0, 0, 0, 10));
-		this.filesGridPane.add(hyperlink, 1, rowNumber, 3, 1);
-		return hyperlink;
-	}
-
-	private int nextRow() {
-		return rowCount.getAndIncrement();
-	}
-
-	private Label newRow(String label, Consumer<File> onceFileHasBeenSpecified) {
-
-		var description = new Label(label);
-
-		var file = new Label(this.pleaseSpecifyAFileLabelText);
-
-		var button = new Button(this.pleaseChooseFileLabelText);
-		button.setOnMouseClicked(mouseEvent -> {
+	private void configureRow(String introductionLabelText, Label introLabel, Button introFileChooserButton, Consumer<File> fileSelected) {
+		introLabel.setText(introductionLabelText);
+		introFileChooserButton.setOnMouseClicked(mouseEvent -> {
 			var fileChooser = new FileChooser();
 			var selectedFile = fileChooser.showOpenDialog(stage.get());
 			if (null != selectedFile) {
-				onceFileHasBeenSpecified.accept(selectedFile);
+				fileSelected.accept(selectedFile);
 			}
 		});
-
-		var rowNumber = nextRow();
-		this.filesGridPane.add(description, 0, rowNumber, 1, 1);
-		this.filesGridPane.add(button, 1, rowNumber, 1, 1);
-		this.filesGridPane.add(file, 2, rowNumber, 3, 1);
-
-//		this.filesGridPane.add(new BorderPane(), 0, nextRow(),  5, 1);
-
-		return file;
 	}
 
 	@EventListener(ApiConnectedEvent.class)
