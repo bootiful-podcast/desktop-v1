@@ -37,6 +37,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 @Log4j2
 @Component
@@ -63,9 +64,8 @@ public class PodcastProductionController {
 	private final String interviewLabelText;
 
 	private final String descriptionLabelText;
-
+	private final String pleaseChooseFileLabelText;
 	private final String introductionLabelText;
-
 	private final String newPodcastText;
 
 	private final ApplicationEventPublisher publisher;
@@ -115,8 +115,11 @@ public class PodcastProductionController {
 
 	private Hyperlink hyperlink;
 
+	private final int padding = 10;
+
+
 	PodcastProductionController(ApiClient client, Executor executor,
-			ApplicationEventPublisher publisher, Messages messages) {
+																													ApplicationEventPublisher publisher, Messages messages) {
 
 		this.executor = executor;
 		this.client = client;
@@ -124,10 +127,11 @@ public class PodcastProductionController {
 		this.publisher = publisher;
 
 		this.disconnectedImageView = this.imageViewForResource(
-				new ClassPathResource("images/disconnected-icon.png"));
+			new ClassPathResource("images/disconnected-icon.png"));
 		this.connectedImageView = this
-				.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
+			.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
 
+		this.pleaseChooseFileLabelText = messages.getMessage("choose-a-file");
 		this.publishButtonText = messages.getMessage("publish");
 		this.pleaseSpecifyAFileLabelText = messages.getMessage("no-file-specified");
 		this.newPodcastText = messages.getMessage("new-podcast");
@@ -137,9 +141,9 @@ public class PodcastProductionController {
 
 		var dropTheMediaOnThePanelBundleCode = "drop-the-media-on-the-panel";
 		this.introductionDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
-				this.introductionLabelText);
+			this.introductionLabelText);
 		this.interviewDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
-				this.interviewLabelText);
+			this.interviewLabelText);
 		this.hyperlinkText = messages.getMessage("production-media-is-done");
 	}
 
@@ -156,7 +160,7 @@ public class PodcastProductionController {
 	private void repaint() {
 		var text = this.description.getText();
 		var dirtyTracker = Arrays.asList(StringUtils.hasText(text.trim()),
-				this.interviewFile.get() != null, this.introductionFile.get() != null);
+			this.interviewFile.get() != null, this.introductionFile.get() != null);
 		var allMatch = dirtyTracker.stream().allMatch(p -> p);
 		var connected = this.connected.get();
 		var formFilledAndConnected = allMatch && connected;
@@ -171,7 +175,7 @@ public class PodcastProductionController {
 	}
 
 	private void updateFilePromptAfterDnD(Label fileLabel, String promptLabelText,
-			AtomicReference<File> fileAtomicReference, File file) {
+																																							AtomicReference<File> fileAtomicReference, File file) {
 		fileAtomicReference.set(file);
 		fileLabel.setText(file.getAbsolutePath());
 		this.filePromptLabel.setText(promptLabelText);
@@ -179,31 +183,61 @@ public class PodcastProductionController {
 	}
 
 	private void handlePublish() {
-		log.debug(String.format("ready to publish! we have an introduction media "
-				+ "asset (%s) and an interview media asset (%s) and a description: %s",
-				this.introductionFile.get().getAbsolutePath(),
-				this.interviewFile.get().getAbsolutePath(), this.description.getText()));
-
+		var introFile = this.introductionFile.get();
+		var interviewFile = this.interviewFile.get();
+		var descriptionText = this.description.getText();
 		var uuid = UUID.randomUUID().toString();
-		var podcast = new PodcastArchiveBuilder(this.description.getText(), uuid);
-		var interviewFileExt = FileUtils.extensionFor(this.interviewFile.get());
-		var introductionFileExt = FileUtils.extensionFor(this.introductionFile.get());
-		Assert.notNull(interviewFileExt, "the interview extension must not be null");
-		Assert.notNull(introductionFileExt,
+
+		log.debug(String.format("ready to publish! we have an introduction media "
+				+ "asset (%s) and an interview media asset (%s) and a description: %s and a UID: %s",
+			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(), descriptionText, uuid));
+
+		// todo hotel wifi is garbage. so, instead of actually hitting
+		//  the microservice on my local computer, i'm gonna spin up
+		//  an async thread and call the same method with the callback
+		//  just to allow me to get on with the work of fixing the UI
+		//  once the publish button is submitted.
+		var ui = true;
+		if (ui)
+			this.executor.execute(new Runnable() {
+
+				@Override
+				@SneakyThrows
+				public void run() {
+					log.info("fake async thing to take up time so the UI can fade out");
+					Thread.sleep(5_000);
+					handleProducedMediaURI(URI.create("http://localhost:8080/podcasts/526fdf4e-3747-4ff9-b423-c981405f10f0/output"));
+				}
+			});
+
+		if (!ui) {
+
+			var podcast = new PodcastArchiveBuilder(descriptionText, uuid);
+			var interviewFileExt = FileUtils.extensionFor(interviewFile);
+			var introductionFileExt = FileUtils.extensionFor(introFile);
+			Assert.notNull(interviewFileExt, "the interview extension must not be null");
+			Assert.notNull(introductionFileExt,
 				"the introduction extension must not be null");
-		Assert.isTrue(interviewFileExt.equalsIgnoreCase(introductionFileExt),
+			Assert.isTrue(interviewFileExt.equalsIgnoreCase(introductionFileExt),
 				"the introduction file type and the interview file type must be the same");
-		var builder = podcast.addMedia(interviewFileExt, introductionFile.get(),
-				interviewFile.get());
-		var archive = builder.build();
-		var productionStatus = this.client.beginProduction(uuid, archive);
-		productionStatus.checkProductionStatus().thenAccept(this::handleProducedMediaURI);
+			var builder = podcast.addMedia(interviewFileExt, introFile, interviewFile);
+			var archive = builder.build();
+			var productionStatus = this.client.beginProduction(uuid, archive);
+			productionStatus.checkProductionStatus().thenAccept(this::handleProducedMediaURI);
+		}
 	}
 
 	private void handleProducedMediaURI(URI uri) {
+		log.debug("URI for the media has returned " + uri.toString());
 		this.uri.set(uri);
 		Platform.runLater(() -> this.hyperlink.setText(this.hyperlinkText));
 	}
+
+	private void updateDescription(String descriptionLabelText) {
+		this.description.setText(descriptionLabelText);
+		this.repaint();
+	}
+
 
 	private void discardPodcast() {
 		this.connectedIcon.setGraphic(this.connectedImageView);
@@ -236,11 +270,11 @@ public class PodcastProductionController {
 	public void initialize() {
 
 		this.publish
-				.setOnMouseClicked(mouseEvent -> executor.execute(this::handlePublish));
+			.setOnMouseClicked(mouseEvent -> executor.execute(this::handlePublish));
 		this.description.setOnKeyTyped(keyEvent -> this.repaint());
 		this.dropTarget.setOnDragOver(event -> {
 			if (event.getGestureSource() != this.dropTarget
-					&& event.getDragboard().hasFiles()) {
+				&& event.getDragboard().hasFiles()) {
 				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
 			}
 			event.consume();
@@ -251,23 +285,21 @@ public class PodcastProductionController {
 			if (eventDragboard.hasFiles()) {
 				var files = eventDragboard.getFiles();
 				Assert.isTrue(files != null && files.size() <= 1,
-						"there must be only one file");
+					"there must be only one file");
 				if (this.introductionFile.get() == null) {
-					this.updateFilePromptAfterDnD(this.introductionLabel,
-							this.introductionDandDText, this.introductionFile,
-							files.get(0));
+					updateIntroductionFile(files.get(0));
 				}
 				else if (this.interviewFile.get() == null) {
-					this.updateFilePromptAfterDnD(this.interviewLabel,
-							this.interviewDandDText, this.interviewFile, files.get(0));
+					updateInterviewFile(files.get(0));
 				}
 				success = true;
 			}
 			event.setDropCompleted(success);
 			event.consume();
 		});
-		this.introductionLabel = this.newRow(this.nextRow(), this.introductionLabelText);
-		this.interviewLabel = this.newRow(this.nextRow(), this.interviewLabelText);
+
+		this.introductionLabel = this.newRow(this.introductionLabelText, this::updateIntroductionFile);
+		this.interviewLabel = this.newRow(this.interviewLabelText, this::updateInterviewFile);
 		this.hyperlink = this.registerHyperlink();
 		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
 		this.hyperlink.setOnAction(actionEvent -> {
@@ -276,8 +308,8 @@ public class PodcastProductionController {
 			Assert.notNull(currentURI, "the URI to download must not be null");
 
 			var extFilter = new FileChooser.ExtensionFilter(
-					messages.getMessage("save-dialog-extension-filter-description"),
-					"*.mp3", "*.wav");
+				messages.getMessage("save-dialog-extension-filter-description"),
+				"*.mp3", "*.wav");
 			var fileChooser = new FileChooser();
 			fileChooser.getExtensionFilters().add(extFilter);
 
@@ -287,20 +319,45 @@ public class PodcastProductionController {
 			if (null != file) {
 				log.debug("you've selected " + file.getAbsolutePath() + ".");
 				this.executor
-						.execute(() -> this.downloadMediaFileToFile(currentURI, file));
+					.execute(() -> this.downloadMediaFileToFile(currentURI, file));
 			}
 		});
+
+		this.filesGridPane.setVgap(this.padding);
+		this.filesGridPane.setHgap(this.padding);
+
 		this.discardPodcast();
+
+		//todo remove this!!!! it's only for development
+		if (false)
+			this.loadPodcastForm(new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
+				new File("/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"), "In this interview Josh Long (@starbuxman) talks to Oleg Zhurakousky.");
+	}
+
+	private void loadPodcastForm(File intro, File interview, String desc) {
+		this.updateIntroductionFile(intro);
+		this.updateInterviewFile(interview);
+		this.updateDescription(desc);
+	}
+
+	private void updateIntroductionFile(File intro) {
+		this.updateFilePromptAfterDnD(this.introductionLabel,
+			this.introductionDandDText, this.introductionFile, intro);
+	}
+
+	private void updateInterviewFile(File file) {
+		this.updateFilePromptAfterDnD(this.interviewLabel,
+			this.interviewDandDText, this.interviewFile, file);
 	}
 
 	@SneakyThrows
 	private void downloadMediaFileToFile(URI mediaUri, File file) {
 		var urlResource = new UrlResource(mediaUri);
 		try (var inputStream = urlResource.getInputStream();
-				var outputStream = new FileOutputStream(file)) {
+							var outputStream = new FileOutputStream(file)) {
 			FileCopyUtils.copy(inputStream, outputStream);
 			log.debug("downloaded " + mediaUri.toString() + " to "
-					+ file.getAbsolutePath() + "!");
+				+ file.getAbsolutePath() + "!");
 		}
 	}
 
@@ -316,14 +373,28 @@ public class PodcastProductionController {
 		return rowCount.getAndIncrement();
 	}
 
-	private Label newRow(int rowNumber, String label) {
+	private Label newRow(String label, Consumer<File> onceFileHasBeenSpecified) {
+
 		var description = new Label(label);
-		var file = new Label();
-		file.setText(this.pleaseSpecifyAFileLabelText);
-		file.setStyle("color: red");
-		file.setPadding(new Insets(0, 0, 0, 10));
+
+		var file = new Label(this.pleaseSpecifyAFileLabelText);
+
+		var button = new Button(this.pleaseChooseFileLabelText);
+		button.setOnMouseClicked(mouseEvent -> {
+			var fileChooser = new FileChooser();
+			var selectedFile = fileChooser.showOpenDialog(stage.get());
+			if (null != selectedFile) {
+				onceFileHasBeenSpecified.accept(selectedFile);
+			}
+		});
+
+		var rowNumber = nextRow();
 		this.filesGridPane.add(description, 0, rowNumber, 1, 1);
-		this.filesGridPane.add(file, 1, rowNumber, 3, 1);
+		this.filesGridPane.add(button, 1, rowNumber, 1, 1);
+		this.filesGridPane.add(file, 2, rowNumber, 3, 1);
+
+//		this.filesGridPane.add(new BorderPane(), 0, nextRow(),  5, 1);
+
 		return file;
 	}
 
