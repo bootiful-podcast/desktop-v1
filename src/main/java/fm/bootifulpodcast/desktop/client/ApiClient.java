@@ -39,8 +39,8 @@ public class ApiClient {
 	private final int monitorDelayInSeconds;
 
 	public ApiClient(String serverUrl, ScheduledExecutorService executor,
-																		ApplicationEventPublisher publisher, RestTemplate restTemplate,
-																		int interval) {
+			ApplicationEventPublisher publisher, RestTemplate restTemplate,
+			int interval) {
 
 		this.monitorDelayInSeconds = interval;
 		this.executor = executor;
@@ -49,29 +49,29 @@ public class ApiClient {
 
 		Assert.hasText(serverUrl, "the server URL provided is null");
 		this.serverUrl = serverUrl.endsWith("/")
-			? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+				? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
 		this.actuatorUrl = this.serverUrl + "/actuator/health";
 
 		log.debug("the server URL is " + this.serverUrl + " and the actuator URL is "
-			+ this.actuatorUrl);
+				+ this.actuatorUrl);
 
 		this.executor.scheduleWithFixedDelay(this::monitorConnectedEndpoint, 0,
-			this.monitorDelayInSeconds, TimeUnit.SECONDS);
+				this.monitorDelayInSeconds, TimeUnit.SECONDS);
 	}
 
 	private void monitorConnectedEndpoint() {
 		try {
 			log.debug("contacting the following endpoint to "
-				+ "verify that we're connected to " + this.serverUrl);
+					+ "verify that we're connected to " + this.serverUrl);
 			var typeReference = new ParameterizedTypeReference<Map<String, Object>>() {
 			};
 			var entity = this.restTemplate.exchange(this.actuatorUrl, HttpMethod.GET,
-				HttpEntity.EMPTY, typeReference);
+					HttpEntity.EMPTY, typeReference);
 			var body = entity.getBody();
 			var jsonMap = Objects.requireNonNull(body);
 			var status = (String) jsonMap.get("status");
 			var isActuatorHealthy = entity.getStatusCode().is2xxSuccessful()
-				&& status.equalsIgnoreCase("UP");
+					&& status.equalsIgnoreCase("UP");
 			var existingConnectedStatus = this.connected.get();
 			if (existingConnectedStatus != isActuatorHealthy) {
 				this.connected.set(isActuatorHealthy);
@@ -105,8 +105,8 @@ public class ApiClient {
 		var location = response.getHeaders().getLocation();
 		Assert.notNull(location, "the location URI must be non-null");
 		return new ProductionStatus(URI.create(this.serverUrl), this.executor,
-			this.restTemplate, null, good, uid, response.getStatusCode(),
-			URI.create(this.serverUrl + location.getPath()));
+				this.restTemplate, null, good, uid, response.getStatusCode(),
+				URI.create(this.serverUrl + location.getPath()));
 	}
 
 }

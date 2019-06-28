@@ -24,7 +24,7 @@ public class PodcastArchiveBuilder {
 
 	private final Map<String, Optional<Media>> media = new ConcurrentHashMap<>();
 
-	private String description, uid;
+	private String description, uid, title;
 
 	private String MP3_EXT = "mp3";
 
@@ -32,23 +32,23 @@ public class PodcastArchiveBuilder {
 
 	private File archivePackage;
 
-	public PodcastArchiveBuilder(String description, String uuid) {
+	public PodcastArchiveBuilder(String title, String description, String uuid) {
 		this.description = description;
 		this.uid = uuid;
-
+		this.title = title;
 		this.media.put(MP3_EXT, Optional.empty());
 		this.media.put(WAV_EXT, Optional.empty());
 	}
 
 	@SneakyThrows
-	private static File doCreatePackage(String description, String uid, Media mp3,
-			Media wav) {
+	private static File doCreatePackage(String title, String description, String uid,
+			Media mp3, Media wav) {
 
 		var staging = Files.createTempDirectory("staging").toFile();
 
 		var xmlFile = new File(staging, "manifest.xml");
 		try (var xmlOutputStream = new BufferedWriter(new FileWriter(xmlFile))) {
-			var xml = buildXmlManifestForPackage(description, uid, mp3, wav);
+			var xml = buildXmlManifestForPackage(title, description, uid, mp3, wav);
 			FileCopyUtils.copy(xml, xmlOutputStream);
 			log.debug("wrote " + xmlFile.getAbsolutePath() + " with content " + xml);
 		}
@@ -91,8 +91,8 @@ public class PodcastArchiveBuilder {
 	}
 
 	@SneakyThrows
-	private static String buildXmlManifestForPackage(String description, String uid,
-			Media mp3, Media wav) {
+	private static String buildXmlManifestForPackage(String title, String description,
+			String uid, Media mp3, Media wav) {
 
 		var docFactory = DocumentBuilderFactory.newInstance();
 		var docBuilder = docFactory.newDocumentBuilder();
@@ -100,6 +100,7 @@ public class PodcastArchiveBuilder {
 		var doc = docBuilder.newDocument();
 		var rootElement = doc.createElement("podcast");
 		rootElement.setAttribute("description", description);
+		rootElement.setAttribute("title", title);
 		rootElement.setAttribute("uid", uid);
 		doc.appendChild(rootElement);
 
@@ -127,10 +128,6 @@ public class PodcastArchiveBuilder {
 		files.add(m.getIntro());
 	}
 
-	public String getDescription() {
-		return description;
-	}
-
 	public PodcastArchiveBuilder addMedia(String ext, File intro, File interv) {
 		return this.addMedia(ext, new Media(ext, intro, interv));
 	}
@@ -141,7 +138,7 @@ public class PodcastArchiveBuilder {
 	}
 
 	public File build() {
-		this.archivePackage = doCreatePackage(this.description, this.uid,
+		this.archivePackage = doCreatePackage(this.title, this.description, this.uid,
 				this.media.get(MP3_EXT).orElse(null),
 				this.media.get(WAV_EXT).orElse(null));
 		return this.archivePackage;

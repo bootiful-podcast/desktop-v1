@@ -21,7 +21,7 @@ class StageInitializer {
 	private final ApplicationContext applicationContext;
 
 	StageInitializer(MessageSource ms, Locale locale,
-																		ApplicationContext applicationContext) {
+			ApplicationContext applicationContext) {
 		this.applicationTitle = ms.getMessage("ui-title", new Object[0], locale);
 		this.applicationContext = applicationContext;
 	}
@@ -33,7 +33,7 @@ class StageInitializer {
 		var fxmlLoader = new FXMLLoader(fxml.getURL());
 		fxmlLoader.setControllerFactory(this.applicationContext::getBean);
 		var root = (Parent) fxmlLoader.load();
-		var scene = new Scene(root); //, 800, 400);
+		var scene = new Scene(root); // , 800, 400);
 		scene.getStylesheets().add("/css/styles.css");
 		stage.setScene(scene);
 		stage.setTitle(this.applicationTitle);
