@@ -2,15 +2,19 @@ package fm.bootifulpodcast.desktop;
 
 import fm.bootifulpodcast.desktop.client.*;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.SneakyThrows;
@@ -101,13 +105,13 @@ public class PodcastProductionController implements Initializable {
 	public Button interviewFileChooserButton;
 
 	@FXML
-	public Button newPodcast;
+	public Button newPodcastButton;
 
 	@FXML
 	public HBox buttons;
 
 	@FXML
-	public Button publish;
+	public Button publishButton;
 
 	@FXML
 	public GridPane filesGridPane;
@@ -138,6 +142,9 @@ public class PodcastProductionController implements Initializable {
 
 	@FXML
 	public Hyperlink downloadMediaHyperlink;
+
+	@FXML
+	public Button saveMediaToFileButton;
 
 	PodcastProductionController(
 		ApiClient client,
@@ -181,8 +188,8 @@ public class PodcastProductionController implements Initializable {
 		var allMatch = dirtyTracker.stream().allMatch(p -> p);
 		var connected = this.connected.get();
 		var formFilledAndConnected = allMatch && connected;
-		this.publish.setDisable(!formFilledAndConnected);
-		this.newPodcast.setDisable(dirtyTracker.stream().noneMatch(p -> p));
+		this.publishButton.setDisable(!formFilledAndConnected);
+		this.newPodcastButton.setDisable(dirtyTracker.stream().noneMatch(p -> p));
 		if (this.connected.get()) {
 			this.connectedIcon.setGraphic(this.connectedImageView);
 		}
@@ -209,7 +216,7 @@ public class PodcastProductionController implements Initializable {
 		var descriptionText = this.description.getText();
 		var uuid = UUID.randomUUID().toString();
 
-		log.debug(String.format("ready to publish! we have an introduction media "
+		log.debug(String.format("ready to publishButton! we have an introduction media "
 				+ "asset (%s) and an interview media asset (%s) and a description: %s and a UID: %s",
 			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(), descriptionText, uuid));
 
@@ -219,7 +226,7 @@ public class PodcastProductionController implements Initializable {
 		//  the microservice on my local computer, i'm gonna spin up
 		//  an async thread and call the same method with the callback
 		//  just to allow me to get on with the work of fixing the UI
-		//  once the publish button is submitted.
+		//  once the publishButton button is submitted.
 		var ui = true;
 		if (ui) {
 			this.executor.execute(new Runnable() {
@@ -262,34 +269,27 @@ public class PodcastProductionController implements Initializable {
 
 	private void showForm() {
 		this.showNewScreenInPane(this.form);
+		this.contributeButton(this.newPodcastButton, this.publishButton);
 	}
 
 	private void showNewScreenInPane(Node node) {
-		hideEverything();
+		this.hideEverything();
 		this.rootPane.getChildren().add(node);
 		node.setVisible(true);
 	}
 
 	private void showProcessing() {
-
-
-		showNewScreenInPane(this.formIsProcessing);
-		Parent parent = this.formIsProcessing.getParent();
-		if (parent instanceof Region) {
-			var height = ((Region) parent).getHeight();
-			Region formIsProcessing = (Region) this.formIsProcessing;
-			formIsProcessing.setPrefHeight(height);
-
-		}
+		this.showNewScreenInPane(this.formIsProcessing);
+		this.contributeButton(this.newPodcastButton, this.saveMediaToFileButton);
 	}
 
 	private void discardPodcast() {
 
 		this.connectedIcon.setGraphic(this.connectedImageView);
-		this.newPodcast.setText(this.newPodcastText);
-		this.publish.setText(this.publishButtonText);
+		this.newPodcastButton.setText(this.newPodcastText);
+		this.publishButton.setText(this.publishButtonText);
 		this.filePromptLabel.setText(this.introductionDandDText);
-		this.publish.setDisable(true);
+		this.publishButton.setDisable(true);
 		this.description.setText("");
 		this.interviewFile.set(null);
 		this.introductionFile.set(null);
@@ -298,10 +298,10 @@ public class PodcastProductionController implements Initializable {
 		this.interviewFileLabel.setText(this.pleaseSpecifyAFileLabelText);
 		this.introFileLabel.setText(this.pleaseSpecifyAFileLabelText);
 		this.descriptionPromptLabel.setText(this.descriptionLabelText);
-		this.newPodcast.setDisable(true);
+		this.newPodcastButton.setDisable(true);
 		this.downloadMediaHyperlink.setVisible(false);
 		this.processingLabel.setVisible(true);
-
+		this.saveMediaToFileButton.setDisable(true);
 		this.showForm();
 	}
 
@@ -328,6 +328,7 @@ public class PodcastProductionController implements Initializable {
 		Assert.notNull(uri, "the URI to download must not be null");
 		Platform.runLater(() -> {
 			this.downloadMediaHyperlink.setVisible(true);
+			this.saveMediaToFileButton.setDisable(false);
 			this.processingLabel.setVisible(false);
 		});
 	}
@@ -393,19 +394,19 @@ public class PodcastProductionController implements Initializable {
 		Platform.runLater(this::repaint);
 	}
 
+	private void contributeButton(Button... buttons) {
+		this.buttons.getChildren().clear();
+		this.buttons.getChildren().addAll(buttons);
+	}
+
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
-		this.processingLabel.setVisible(false);
-		VBox.setVgrow(this.formIsProcessing, Priority.ALWAYS);
-		this.downloadMediaHyperlink.setVisible(false);
-		this.downloadMediaHyperlink.setText(messages.getMessage("file-done-alert-message"));
-		this.downloadMediaHyperlink.setWrapText(true);
-		this.downloadMediaHyperlink.setOnMouseClicked(e -> {
+		EventHandler<MouseEvent> saveMediaToFileEventHandler = e -> {
 			var resolvedUri = this.uri.get();
 			if (resolvedUri != null) {
 				Platform.runLater(() -> {
 					var theStage = this.stage.get();
-					var saveDlgLabel = messages.getMessage("save-dialog-extension-filter-description");
+					var saveDlgLabel = this.messages.getMessage("save-dialog-extension-filter-description");
 					var extFilter = new FileChooser.ExtensionFilter(saveDlgLabel, "*.mp3", "*.wav");
 					var fileChooser = new FileChooser();
 					fileChooser.getExtensionFilters().add(extFilter);
@@ -417,9 +418,18 @@ public class PodcastProductionController implements Initializable {
 					}
 				});
 			}
-		});
+		};
+		saveMediaToFileButton.setOnMouseClicked(saveMediaToFileEventHandler);
+		this.processingLabel.setVisible(false);
+		this.saveMediaToFileButton.setText(this.messages.getMessage("click-to-save-file"));
+		VBox.setVgrow(this.formIsProcessing, Priority.ALWAYS);
+		this.downloadMediaHyperlink.setVisible(false);
 
-		this.publish.setOnMouseClicked(
+		this.downloadMediaHyperlink.setText(this.messages.getMessage("file-done-alert-message"));
+		this.downloadMediaHyperlink.setWrapText(true);
+		this.downloadMediaHyperlink.setOnMouseClicked(saveMediaToFileEventHandler);
+
+		this.publishButton.setOnMouseClicked(
 			mouseEvent -> this.executor.execute(this::handlePublish));
 		this.description.setOnKeyTyped(keyEvent -> this.repaint());
 		this.form.setOnDragOver(event -> {
@@ -452,7 +462,7 @@ public class PodcastProductionController implements Initializable {
 			this.introFileChooserButton, this::updateIntroductionFile);
 		this.configureRow(this.interviewLabelText, this.interviewLabel,
 			this.interviewFileChooserButton, this::updateInterviewFile);
-		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
+		this.newPodcastButton.setOnMouseClicked(mouseEvent -> this.discardPodcast());
 		this.processingLabel.setText(this.messages.getMessage("processing-status"));
 		this.processingLabel.setVisible(true);
 		this.discardPodcast();

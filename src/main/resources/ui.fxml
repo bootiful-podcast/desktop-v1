@@ -57,10 +57,11 @@
                 </GridPane>
             </VBox>
 
-            <VBox fx:id="formIsProcessing"
-                  alignment="CENTER">
+            <VBox fx:id="formIsProcessing" alignment="CENTER">
+
                 <Label fx:id="processingLabel" text="Processing..."/>
                 <Hyperlink fx:id="downloadMediaHyperlink" text="Click Me"/>
+
             </VBox>
         </VBox>
     </center>
@@ -79,9 +80,14 @@
                 </left>
                 <right>
                     <HBox fx:id="buttons" alignment="CENTER_RIGHT" spacing="10">
-                        <Button fx:id="newPodcast" text="New Podcast"/>
-                        <Button fx:id="publish" disable="true" text="Publish"/>
+                        <Button fx:id="newPodcastButton" text="New Podcast"/>
+                        <Button fx:id="publishButton" disable="true"
+                                text="Publish"/>
+                        <Button fx:id="saveMediaToFileButton" disable="true"
+                                text="Save File"/>
                     </HBox>
+
+
                 </right>
             </BorderPane>
         </VBox>
