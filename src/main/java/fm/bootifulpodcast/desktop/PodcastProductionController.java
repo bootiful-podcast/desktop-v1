@@ -3,16 +3,16 @@ package fm.bootifulpodcast.desktop;
 import fm.bootifulpodcast.desktop.client.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
+import javafx.scene.Parent;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -31,7 +31,9 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URI;
+import java.net.URL;
 import java.util.Arrays;
+import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,7 +43,7 @@ import java.util.function.Consumer;
 
 @Log4j2
 @Component
-public class PodcastProductionController {
+public class PodcastProductionController implements Initializable {
 
 	private final AtomicInteger rowCount = new AtomicInteger(0);
 
@@ -136,6 +138,9 @@ public class PodcastProductionController {
 
 	@FXML
 	public Label processingLabel;
+
+	@FXML
+	public Hyperlink downloadMediaHyperlink;
 
 	PodcastProductionController(
 		ApiClient client,
@@ -251,34 +256,6 @@ public class PodcastProductionController {
 		}
 	}
 
-	private void handleProducedMediaURI(URI uri) {
-		log.debug("URI for the media has returned " + uri.toString());
-		this.uri.set(uri);
-		var theStage = this.stage.get();
-		Assert.notNull(uri, "the URI to download must not be null");
-
-		Platform.runLater(() -> {
-
-			var saveDlgLabel = messages.getMessage("save-dialog-extension-filter-description");
-			var extFilter = new FileChooser.ExtensionFilter(saveDlgLabel, "*.mp3", "*.wav");
-
-			var fileChooser = new FileChooser();
-			fileChooser.getExtensionFilters().add(extFilter);
-
-			Assert.notNull(theStage, "the stage must have been set");
-
-			var file = fileChooser.showSaveDialog(theStage);
-
-			if (null != file) {
-				log.debug("you've selected " + file.getAbsolutePath() + ".");
-				this.executor.execute(() -> this.downloadMediaFileToFile(uri, file));
-			}
-			else	{
-				discardPodcast();
-			}
-
-		});
-	}
 
 	private void updateDescription(String descriptionLabelText) {
 		this.description.setText(descriptionLabelText);
@@ -293,10 +270,20 @@ public class PodcastProductionController {
 		hideEverything();
 		this.rootPane.getChildren().add(node);
 		node.setVisible(true);
+//		double height = this.rootPane.getHeight();
+	/*	if (node instanceof Region) {
+			((Region) node).setPrefHeight(height);
+		}*/
 	}
 
 	private void showProcessing() {
 		showNewScreenInPane(this.formIsProcessing);
+		Parent parent = this.formIsProcessing.getParent();
+		if (parent instanceof Region) {
+			var region = (Region) parent;
+			var height = region.getHeight();
+			((Region) this.formIsProcessing).setPrefHeight(height);
+		}
 	}
 
 	private void discardPodcast() {
@@ -336,55 +323,11 @@ public class PodcastProductionController {
 		}
 	}
 
-	@FXML
-	@SneakyThrows
-	public void initialize() {
-		this.publish.setOnMouseClicked(
-			mouseEvent -> this.executor.execute(this::handlePublish));
-		this.description.setOnKeyTyped(keyEvent -> this.repaint());
-		this.form.setOnDragOver(event -> {
-			if (event.getGestureSource() != this.form
-				&& event.getDragboard().hasFiles()) {
-				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-			}
-			event.consume();
-		});
-		this.form.setOnDragDropped(event -> {
-			var eventDragboard = event.getDragboard();
-			var success = false;
-			if (eventDragboard.hasFiles()) {
-				var files = eventDragboard.getFiles();
-				Assert.isTrue(files != null && files.size() <= 1,
-					"there must be only one file");
-				if (this.introductionFile.get() == null) {
-					updateIntroductionFile(files.get(0));
-				}
-				else if (this.interviewFile.get() == null) {
-					updateInterviewFile(files.get(0));
-				}
-				success = true;
-			}
-			event.setDropCompleted(success);
-			event.consume();
-		});
-
-		this.configureRow(this.introductionLabelText, this.introLabel,
-			this.introFileChooserButton, this::updateIntroductionFile);
-		this.configureRow(this.interviewLabelText, this.interviewLabel,
-			this.interviewFileChooserButton, this::updateInterviewFile);
-		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
-		this.processingLabel.setText(this.messages.getMessage("processing-status"));
-		this.discardPodcast();
-
-		// todo remove this!!!! it's only for development
-		if (true) {
-
-			this.loadPodcastIntoForm(
-				new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
-				new File(
-					"/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"),
-				"In this interview Josh Long (@starbuxman) talks to Oleg Zhurakousky.");
-		}
+	private void handleProducedMediaURI(URI uri) {
+		log.debug("URI for the media has returned " + uri.toString());
+		this.uri.set(uri);
+		Assert.notNull(uri, "the URI to download must not be null");
+		Platform.runLater(() -> this.downloadMediaHyperlink.setVisible(true));
 	}
 
 	private void loadPodcastIntoForm(File mainIntro, File mainInterview, String description) {
@@ -448,4 +391,78 @@ public class PodcastProductionController {
 		Platform.runLater(this::repaint);
 	}
 
+	@Override
+	public void initialize(URL url, ResourceBundle resourceBundle) {
+
+		this.processingLabel.setVisible(false);
+		this.downloadMediaHyperlink.setVisible(false);
+		this.downloadMediaHyperlink.setText(messages.getMessage("file-done-alert-message"));
+		this.downloadMediaHyperlink.setWrapText(true);
+		this.downloadMediaHyperlink.setOnMouseClicked(e -> {
+			var resolvedUri = this.uri.get();
+			if (resolvedUri != null) {
+				Platform.runLater(() -> {
+					var theStage = this.stage.get();
+					var saveDlgLabel = messages.getMessage("save-dialog-extension-filter-description");
+					var extFilter = new FileChooser.ExtensionFilter(saveDlgLabel, "*.mp3", "*.wav");
+					var fileChooser = new FileChooser();
+					fileChooser.getExtensionFilters().add(extFilter);
+					Assert.notNull(theStage, "the stage must have been set");
+					var file = fileChooser.showSaveDialog(theStage);
+					if (null != file) {
+						log.debug("you've selected " + file.getAbsolutePath() + ".");
+						this.executor.execute(() -> this.downloadMediaFileToFile(resolvedUri, file));
+					}
+				});
+			}
+		});
+
+		this.publish.setOnMouseClicked(
+			mouseEvent -> this.executor.execute(this::handlePublish));
+		this.description.setOnKeyTyped(keyEvent -> this.repaint());
+		this.form.setOnDragOver(event -> {
+			if (event.getGestureSource() != this.form
+				&& event.getDragboard().hasFiles()) {
+				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+			}
+			event.consume();
+		});
+		this.form.setOnDragDropped(event -> {
+			var eventDragboard = event.getDragboard();
+			var success = false;
+			if (eventDragboard.hasFiles()) {
+				var files = eventDragboard.getFiles();
+				Assert.isTrue(files != null && files.size() <= 1,
+					"there must be only one file");
+				if (this.introductionFile.get() == null) {
+					updateIntroductionFile(files.get(0));
+				}
+				else if (this.interviewFile.get() == null) {
+					updateInterviewFile(files.get(0));
+				}
+				success = true;
+			}
+			event.setDropCompleted(success);
+			event.consume();
+		});
+
+		this.configureRow(this.introductionLabelText, this.introLabel,
+			this.introFileChooserButton, this::updateIntroductionFile);
+		this.configureRow(this.interviewLabelText, this.interviewLabel,
+			this.interviewFileChooserButton, this::updateInterviewFile);
+		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
+		this.processingLabel.setText(this.messages.getMessage("processing-status"));
+		this.processingLabel.setVisible(true);
+		this.discardPodcast();
+
+		// todo remove this!!!! it's only for development
+		if (true) {
+
+			this.loadPodcastIntoForm(
+				new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
+				new File(
+					"/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"),
+				"In this interview Josh Long (@starbuxman) talks to Oleg Zhurakousky.");
+		}
+	}
 }
