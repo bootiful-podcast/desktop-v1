@@ -42,9 +42,11 @@ public class BootifulFxApplication {
 	}
 
 	@Bean
-	ApiClient apiClient(@Value("${podcast.api.url}") String apiUrl,
-			ScheduledExecutorService executorService, ApplicationEventPublisher publisher,
-			RestTemplate restTemplate) {
+	ApiClient apiClient(
+		@Value("${podcast.api.url}") String apiUrl,
+		ScheduledExecutorService executorService, ApplicationEventPublisher publisher,
+		RestTemplate restTemplate) {
+		log.info("Connecting to API endpoint: [" + apiUrl + ']');
 		return new ApiClient(apiUrl, executorService, publisher, restTemplate);
 	}
 
