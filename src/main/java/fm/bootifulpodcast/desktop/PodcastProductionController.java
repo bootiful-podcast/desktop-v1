@@ -137,19 +137,19 @@ public class PodcastProductionController {
 	@FXML
 	public Label processingLabel;
 
-	PodcastProductionController(ApiClient client, Executor executor,
-																													ApplicationEventPublisher publisher, Messages messages) {
+	PodcastProductionController(
+		ApiClient client,
+		Executor executor,
+		ApplicationEventPublisher publisher,
+		Messages messages) {
 
 		this.executor = executor;
 		this.client = client;
 		this.messages = messages;
 		this.publisher = publisher;
 
-		this.disconnectedImageView = this.imageViewForResource(
-			new ClassPathResource("images/disconnected-icon.png"));
-		this.connectedImageView = this
-			.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
-
+		this.disconnectedImageView = this.imageViewForResource(new ClassPathResource("images/disconnected-icon.png"));
+		this.connectedImageView = this.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
 		this.publishButtonText = messages.getMessage("publish");
 		this.pleaseSpecifyAFileLabelText = messages.getMessage("no-file-specified");
 		this.newPodcastText = messages.getMessage("new-podcast");
@@ -158,10 +158,8 @@ public class PodcastProductionController {
 		this.descriptionLabelText = messages.getMessage("description-prompt");
 
 		var dropTheMediaOnThePanelBundleCode = "drop-the-media-on-the-panel";
-		this.introductionDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
-			this.introductionLabelText);
-		this.interviewDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
-			this.interviewLabelText);
+		this.introductionDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode, this.introductionLabelText);
+		this.interviewDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode, this.interviewLabelText);
 	}
 
 	@EventListener
@@ -191,8 +189,12 @@ public class PodcastProductionController {
 		}
 	}
 
-	private void updateFilePromptAfterDnD(Label fileLabel, String promptLabelText,
-																																							AtomicReference<File> fileAtomicReference, File file) {
+	private void updateFilePromptAfterDnD(
+		Label fileLabel,
+		String promptLabelText,
+		AtomicReference<File> fileAtomicReference,
+		File file
+	) {
 		fileAtomicReference.set(file);
 		fileLabel.setText(file.getAbsolutePath());
 		this.filePromptLabel.setText(promptLabelText);
@@ -203,7 +205,6 @@ public class PodcastProductionController {
 		var introFile = this.introductionFile.get();
 		var interviewFile = this.interviewFile.get();
 		var descriptionText = this.description.getText();
-
 		var uuid = UUID.randomUUID().toString();
 
 		log.debug(String.format("ready to publish! we have an introduction media "
@@ -217,7 +218,7 @@ public class PodcastProductionController {
 		//  an async thread and call the same method with the callback
 		//  just to allow me to get on with the work of fixing the UI
 		//  once the publish button is submitted.
-		var ui = false;
+		var ui = true;
 		if (ui)
 			this.executor.execute(new Runnable() {
 
@@ -245,7 +246,7 @@ public class PodcastProductionController {
 			var archive = builder.build();
 			this.client
 				.beginProduction(uuid, archive)
-				.checkProductionStatus()//
+				.checkStatus()//
 				.thenAccept(this::handleProducedMediaURI);
 		}
 	}
@@ -253,7 +254,30 @@ public class PodcastProductionController {
 	private void handleProducedMediaURI(URI uri) {
 		log.debug("URI for the media has returned " + uri.toString());
 		this.uri.set(uri);
-		this.showFileChooserAndDownloadURI(uri);
+		var theStage = this.stage.get();
+		Assert.notNull(uri, "the URI to download must not be null");
+
+		Platform.runLater(() -> {
+
+			var saveDlgLabel = messages.getMessage("save-dialog-extension-filter-description");
+			var extFilter = new FileChooser.ExtensionFilter(saveDlgLabel, "*.mp3", "*.wav");
+
+			var fileChooser = new FileChooser();
+			fileChooser.getExtensionFilters().add(extFilter);
+
+			Assert.notNull(theStage, "the stage must have been set");
+
+			var file = fileChooser.showSaveDialog(theStage);
+
+			if (null != file) {
+				log.debug("you've selected " + file.getAbsolutePath() + ".");
+				this.executor.execute(() -> this.downloadMediaFileToFile(uri, file));
+			}
+			else	{
+				discardPodcast();
+			}
+
+		});
 	}
 
 	private void updateDescription(String descriptionLabelText) {
@@ -349,13 +373,13 @@ public class PodcastProductionController {
 		this.configureRow(this.interviewLabelText, this.interviewLabel,
 			this.interviewFileChooserButton, this::updateInterviewFile);
 		this.newPodcast.setOnMouseClicked(mouseEvent -> this.discardPodcast());
-		this.processingLabel.setText(messages.getMessage("processing-status"));
+		this.processingLabel.setText(this.messages.getMessage("processing-status"));
 		this.discardPodcast();
 
 		// todo remove this!!!! it's only for development
-		if (false) {
+		if (true) {
 
-			this.loadPodcastForm(
+			this.loadPodcastIntoForm(
 				new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
 				new File(
 					"/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"),
@@ -363,28 +387,7 @@ public class PodcastProductionController {
 		}
 	}
 
-	private void showFileChooserAndDownloadURI(URI currentURI) {
-		Assert.notNull(currentURI, "the URI to download must not be null");
-
-		Platform.runLater(() -> {
-			var extFilter = new FileChooser.ExtensionFilter(
-				messages.getMessage("save-dialog-extension-filter-description"), "*.mp3",
-				"*.wav");
-			var fileChooser = new FileChooser();
-			fileChooser.getExtensionFilters().add(extFilter);
-			var stage = this.stage.get();
-			Assert.notNull(stage, "the stage must have been set");
-			var file = fileChooser.showSaveDialog(stage);
-			if (null != file) {
-				log.debug("you've selected " + file.getAbsolutePath() + ".");
-				this.executor.execute(() -> this.downloadMediaFileToFile(currentURI, file));
-			}
-
-		});
-
-	}
-
-	private void loadPodcastForm(File mainIntro, File mainInterview, String description) {
+	private void loadPodcastIntoForm(File mainIntro, File mainInterview, String description) {
 		this.updateIntroductionFile(mainIntro);
 		this.updateInterviewFile(mainInterview);
 		this.updateDescription(description);
@@ -411,10 +414,13 @@ public class PodcastProductionController {
 
 		Platform.runLater(() -> {
 			var alert = new Alert(Alert.AlertType.INFORMATION);
-			alert.setTitle(messages.getMessage("file-done-alert-title"));
+			alert.setTitle(this.messages.getMessage("file-done-alert-title"));
 			alert.setHeaderText(null);
-			alert.setContentText(messages.getMessage("file-done-alert-message", file.getAbsolutePath()));
+			alert.setContentText(this.messages.getMessage("file-done-alert-message", file.getAbsolutePath()));
 			alert.showAndWait();
+
+			this.discardPodcast();
+
 		});
 	}
 

@@ -35,11 +35,13 @@ public class ApiClient {
 	private final ApplicationEventPublisher publisher;
 
 	private final String serverUrl, actuatorUrl;
-	private final int monitorDelayInSeconds = 10;
+	private final int monitorDelayInSeconds;
 
 	public ApiClient(String serverUrl, ScheduledExecutorService executor,
-																		ApplicationEventPublisher publisher, RestTemplate restTemplate) {
+																		ApplicationEventPublisher publisher, RestTemplate restTemplate,
+																		int interval) {
 
+		this.monitorDelayInSeconds = interval;
 		this.executor = executor;
 		this.restTemplate = restTemplate;
 		this.publisher = publisher;

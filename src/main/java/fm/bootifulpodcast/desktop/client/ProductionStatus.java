@@ -70,7 +70,7 @@ public class ProductionStatus {
 
 	private URI statusUrl, rootServerUrl;
 
-	public CompletableFuture<URI> checkProductionStatus() {
+	public CompletableFuture<URI> checkStatus() {
 		Assert.notNull(this.executor, "the executor must not be null");
 		return CompletableFuture.supplyAsync(this::doPollProductionStatus, this.executor);
 	}

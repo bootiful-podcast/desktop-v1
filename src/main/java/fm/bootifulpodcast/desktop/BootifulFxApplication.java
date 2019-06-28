@@ -34,7 +34,7 @@ public class BootifulFxApplication {
 	@Bean
 	MessageSource messageSource() {
 		var utf8 = StandardCharsets.UTF_8.toString();
-		log.debug("default encoding is: " + utf8);
+		log.debug("default system encoding is: " + utf8);
 		var resourceBundleMessageSource = new ReloadableResourceBundleMessageSource();
 		resourceBundleMessageSource.setBasename("classpath:messages/labels");
 		resourceBundleMessageSource.setDefaultEncoding(utf8);
@@ -43,11 +43,12 @@ public class BootifulFxApplication {
 
 	@Bean
 	ApiClient apiClient(
+		@Value("${podcast.monitor.interval}") int interval,
 		@Value("${podcast.api.url}") String apiUrl,
 		ScheduledExecutorService executorService, ApplicationEventPublisher publisher,
 		RestTemplate restTemplate) {
-		log.info("Connecting to API endpoint: [" + apiUrl + ']');
-		return new ApiClient(apiUrl, executorService, publisher, restTemplate);
+		log.info("connecting to API endpoint: [" + apiUrl + ']');
+		return new ApiClient(apiUrl, executorService, publisher, restTemplate, interval);
 	}
 
 	@Bean
