@@ -10,7 +10,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -61,12 +60,13 @@ public class PodcastProductionController implements Initializable {
 	private final String introductionDandDText;
 
 	private final String pleaseSpecifyAFileLabelText;
+	private final String titlePromptLabelText;
 
 	private final String publishButtonText;
 
 	private final String interviewLabelText;
 
-	private final String descriptionLabelText;
+	private final String descriptionPromptLabelText;
 
 	private final String introductionLabelText;
 
@@ -145,31 +145,8 @@ public class PodcastProductionController implements Initializable {
 
 	@FXML
 	public Button saveMediaToFileButton;
-
-	PodcastProductionController(
-		ApiClient client,
-		Executor executor,
-		ApplicationEventPublisher publisher,
-		Messages messages) {
-
-		this.executor = executor;
-		this.client = client;
-		this.messages = messages;
-		this.publisher = publisher;
-
-		this.disconnectedImageView = this.imageViewForResource(new ClassPathResource("images/disconnected-icon.png"));
-		this.connectedImageView = this.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
-		this.publishButtonText = messages.getMessage("publish");
-		this.pleaseSpecifyAFileLabelText = messages.getMessage("no-file-specified");
-		this.newPodcastText = messages.getMessage("new-podcast");
-		this.introductionLabelText = messages.getMessage("introduction-media");
-		this.interviewLabelText = messages.getMessage("interview-media");
-		this.descriptionLabelText = messages.getMessage("description-prompt");
-
-		var dropTheMediaOnThePanelBundleCode = "drop-the-media-on-the-panel";
-		this.introductionDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode, this.introductionLabelText);
-		this.interviewDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode, this.interviewLabelText);
-	}
+	@FXML
+	public Label titlePromptLabel;
 
 	@EventListener
 	public void stageReady(StageReadyEvent stageReadyEvent) {
@@ -198,12 +175,61 @@ public class PodcastProductionController implements Initializable {
 		}
 	}
 
-	private void updateFilePromptAfterDnD(
-		Label fileLabel,
-		String promptLabelText,
-		AtomicReference<File> fileAtomicReference,
-		File file
-	) {
+	@FXML
+	public TextField title;
+
+	PodcastProductionController(ApiClient client, Executor executor,
+																													ApplicationEventPublisher publisher, Messages messages) {
+
+		this.executor = executor;
+		this.client = client;
+		this.messages = messages;
+		this.publisher = publisher;
+
+
+		this.titlePromptLabelText = this.messages.getMessage("title-prompt");
+
+		this.disconnectedImageView = this.imageViewForResource(
+			new ClassPathResource("images/disconnected-icon.png"));
+		this.connectedImageView = this
+			.imageViewForResource(new ClassPathResource("images/connected-icon.png"));
+		this.publishButtonText = messages.getMessage("publish");
+		this.pleaseSpecifyAFileLabelText = messages.getMessage("no-file-specified");
+		this.newPodcastText = messages.getMessage("new-podcast");
+		this.introductionLabelText = messages.getMessage("introduction-media");
+		this.interviewLabelText = messages.getMessage("interview-media");
+		this.descriptionPromptLabelText = messages.getMessage("description-prompt");
+
+		var dropTheMediaOnThePanelBundleCode = "drop-the-media-on-the-panel";
+		this.introductionDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
+			this.introductionLabelText);
+		this.interviewDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
+			this.interviewLabelText);
+	}
+
+	private void updateDescription(String descriptionLabelText) {
+		this.description.setText(descriptionLabelText);
+		this.repaint();
+	}
+
+	private void showForm() {
+		this.showNewScreenInPane(this.form);
+		this.contributeButton(this.newPodcastButton, this.publishButton);
+	}
+
+	private void showNewScreenInPane(Node node) {
+		this.hideEverything();
+		this.rootPane.getChildren().add(node);
+		node.setVisible(true);
+	}
+
+	private void showProcessing() {
+		this.showNewScreenInPane(this.formIsProcessing);
+		this.contributeButton(this.newPodcastButton, this.saveMediaToFileButton);
+	}
+
+	private void updateFilePromptAfterDnD(Label fileLabel, String promptLabelText,
+																																							AtomicReference<File> fileAtomicReference, File file) {
 		fileAtomicReference.set(file);
 		fileLabel.setText(file.getAbsolutePath());
 		this.filePromptLabel.setText(promptLabelText);
@@ -218,15 +244,16 @@ public class PodcastProductionController implements Initializable {
 
 		log.debug(String.format("ready to publishButton! we have an introduction media "
 				+ "asset (%s) and an interview media asset (%s) and a description: %s and a UID: %s",
-			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(), descriptionText, uuid));
+			introFile.getAbsolutePath(), interviewFile.getAbsolutePath(),
+			descriptionText, uuid));
 
 		Platform.runLater(this::showProcessing);
 
 		// todo hotel wifi is garbage. so, instead of actually hitting
-		//  the microservice on my local computer, i'm gonna spin up
-		//  an async thread and call the same method with the callback
-		//  just to allow me to get on with the work of fixing the UI
-		//  once the publishButton button is submitted.
+		// the microservice on my local computer, i'm gonna spin up
+		// an async thread and call the same method with the callback
+		// just to allow me to get on with the work of fixing the UI
+		// once the publishButton button is submitted.
 		var ui = true;
 		if (ui) {
 			this.executor.execute(new Runnable() {
@@ -254,42 +281,20 @@ public class PodcastProductionController implements Initializable {
 				"the introduction file type and the interview file type must be the same");
 			var builder = podcast.addMedia(interviewFileExt, introFile, interviewFile);
 			var archive = builder.build();
-			this.client
-				.beginProduction(uuid, archive)
-				.checkStatus()//
+			this.client.beginProduction(uuid, archive).checkStatus()//
 				.thenAccept(this::handleProducedMediaURI);
 		}
 	}
 
-
-	private void updateDescription(String descriptionLabelText) {
-		this.description.setText(descriptionLabelText);
-		this.repaint();
-	}
-
-	private void showForm() {
-		this.showNewScreenInPane(this.form);
-		this.contributeButton(this.newPodcastButton, this.publishButton);
-	}
-
-	private void showNewScreenInPane(Node node) {
-		this.hideEverything();
-		this.rootPane.getChildren().add(node);
-		node.setVisible(true);
-	}
-
-	private void showProcessing() {
-		this.showNewScreenInPane(this.formIsProcessing);
-		this.contributeButton(this.newPodcastButton, this.saveMediaToFileButton);
-	}
-
 	private void discardPodcast() {
+
 
 		this.connectedIcon.setGraphic(this.connectedImageView);
 		this.newPodcastButton.setText(this.newPodcastText);
 		this.publishButton.setText(this.publishButtonText);
 		this.filePromptLabel.setText(this.introductionDandDText);
 		this.publishButton.setDisable(true);
+		this.title.setText("");
 		this.description.setText("");
 		this.interviewFile.set(null);
 		this.introductionFile.set(null);
@@ -297,7 +302,6 @@ public class PodcastProductionController implements Initializable {
 		this.introFileLabel.setText(this.introductionLabelText);
 		this.interviewFileLabel.setText(this.pleaseSpecifyAFileLabelText);
 		this.introFileLabel.setText(this.pleaseSpecifyAFileLabelText);
-		this.descriptionPromptLabel.setText(this.descriptionLabelText);
 		this.newPodcastButton.setDisable(true);
 		this.downloadMediaHyperlink.setVisible(false);
 		this.processingLabel.setVisible(true);
@@ -333,10 +337,17 @@ public class PodcastProductionController implements Initializable {
 		});
 	}
 
-	private void loadPodcastIntoForm(File mainIntro, File mainInterview, String description) {
+	private void loadPodcastIntoForm(File mainIntro, File mainInterview,
+																																		String title, String description) {
 		this.updateIntroductionFile(mainIntro);
 		this.updateInterviewFile(mainInterview);
 		this.updateDescription(description);
+		this.updateTitle(title);
+	}
+
+	private void updateTitle(String title) {
+		this.title.setText(title);
+		this.repaint();
 	}
 
 	private void updateIntroductionFile(File intro) {
@@ -355,18 +366,18 @@ public class PodcastProductionController implements Initializable {
 		try (var inputStream = urlResource.getInputStream();
 							var outputStream = new FileOutputStream(file)) {
 			FileCopyUtils.copy(inputStream, outputStream);
-			log.debug("downloaded " + mediaUri.toString() + " to " + file.getAbsolutePath() + "!");
+			log.debug("downloaded " + mediaUri.toString() + " to "
+				+ file.getAbsolutePath() + "!");
 		}
 
 		Platform.runLater(() -> {
 			var alert = new Alert(Alert.AlertType.INFORMATION);
 			alert.setTitle(this.messages.getMessage("file-done-alert-title"));
 			alert.setHeaderText(null);
-			alert.setContentText(this.messages.getMessage("file-done-alert-message", file.getAbsolutePath()));
+			alert.setContentText(this.messages.getMessage("file-done-alert-message",
+				file.getAbsolutePath()));
 			alert.showAndWait();
-
 			this.discardPodcast();
-
 		});
 	}
 
@@ -406,24 +417,34 @@ public class PodcastProductionController implements Initializable {
 			if (resolvedUri != null) {
 				Platform.runLater(() -> {
 					var theStage = this.stage.get();
-					var saveDlgLabel = this.messages.getMessage("save-dialog-extension-filter-description");
-					var extFilter = new FileChooser.ExtensionFilter(saveDlgLabel, "*.mp3", "*.wav");
+					var saveDlgLabel = this.messages
+						.getMessage("save-dialog-extension-filter-description");
+					var extFilter = new FileChooser.ExtensionFilter(saveDlgLabel, "*.mp3",
+						"*.wav");
 					var fileChooser = new FileChooser();
 					fileChooser.getExtensionFilters().add(extFilter);
 					Assert.notNull(theStage, "the stage must have been set");
 					var file = fileChooser.showSaveDialog(theStage);
 					if (null != file) {
 						log.debug("you've selected " + file.getAbsolutePath() + ".");
-						this.executor.execute(() -> this.downloadMediaFileToFile(resolvedUri, file));
+						this.executor.execute(
+							() -> this.downloadMediaFileToFile(resolvedUri, file));
 					}
 				});
 			}
 		};
-		saveMediaToFileButton.setOnMouseClicked(saveMediaToFileEventHandler);
+
+
+		this.filePromptLabel.setWrapText(true);
+		this.saveMediaToFileButton.setOnMouseClicked(saveMediaToFileEventHandler);
 		this.processingLabel.setVisible(false);
-		this.saveMediaToFileButton.setText(this.messages.getMessage("click-to-save-file"));
+		this.saveMediaToFileButton
+			.setText(this.messages.getMessage("click-to-save-file"));
 		VBox.setVgrow(this.formIsProcessing, Priority.ALWAYS);
 		this.downloadMediaHyperlink.setVisible(false);
+
+		this.titlePromptLabel.setText(this.titlePromptLabelText);
+		this.descriptionPromptLabel.setText(this.descriptionPromptLabelText);
 
 		this.downloadMediaHyperlink.setText(this.messages.getMessage("file-done-alert-message"));
 		this.downloadMediaHyperlink.setWrapText(true);
@@ -432,32 +453,6 @@ public class PodcastProductionController implements Initializable {
 		this.publishButton.setOnMouseClicked(
 			mouseEvent -> this.executor.execute(this::handlePublish));
 		this.description.setOnKeyTyped(keyEvent -> this.repaint());
-		this.form.setOnDragOver(event -> {
-			if (event.getGestureSource() != this.form
-				&& event.getDragboard().hasFiles()) {
-				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-			}
-			event.consume();
-		});
-		this.form.setOnDragDropped(event -> {
-			var eventDragboard = event.getDragboard();
-			var success = false;
-			if (eventDragboard.hasFiles()) {
-				var files = eventDragboard.getFiles();
-				Assert.isTrue(files != null && files.size() <= 1,
-					"there must be only one file");
-				if (this.introductionFile.get() == null) {
-					updateIntroductionFile(files.get(0));
-				}
-				else if (this.interviewFile.get() == null) {
-					updateInterviewFile(files.get(0));
-				}
-				success = true;
-			}
-			event.setDropCompleted(success);
-			event.consume();
-		});
-
 		this.configureRow(this.introductionLabelText, this.introLabel,
 			this.introFileChooserButton, this::updateIntroductionFile);
 		this.configureRow(this.interviewLabelText, this.interviewLabel,
@@ -471,10 +466,13 @@ public class PodcastProductionController implements Initializable {
 		if (true) {
 
 			this.loadPodcastIntoForm(
+
 				new File("/Users/joshlong/Desktop/sample-podcast/1-oleg-intro.mp3"),
 				new File(
 					"/Users/joshlong/Desktop/sample-podcast/2-oleg-interview-lower.mp3"),
+				"Oleg Zhurakousky",
 				"In this interview Josh Long (@starbuxman) talks to Oleg Zhurakousky.");
 		}
 	}
+
 }

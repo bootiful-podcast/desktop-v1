@@ -16,11 +16,16 @@
                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                 </padding>
 
-                <Label fx:id="descriptionPromptLabel"
+                <Label fx:id="titlePromptLabel" styleClass="prompt"
+                       text="give a title"/>
+                <TextField text="would be nice" fx:id="title"/>
+
+                <Label fx:id="descriptionPromptLabel" styleClass="prompt"
                        text="give a description"/>
                 <TextArea fx:id="description" maxHeight="80" wrapText="true"/>
 
-                <Label fx:id="filePromptLabel" text="choose a file"/>
+                <Label fx:id="filePromptLabel" styleClass="prompt"
+                       text="choose a file"/>
                 <GridPane fx:id="filesGridPane" hgap="10" vgap="10">
 
 

@@ -35,6 +35,7 @@ public class ApiClient {
 	private final ApplicationEventPublisher publisher;
 
 	private final String serverUrl, actuatorUrl;
+
 	private final int monitorDelayInSeconds;
 
 	public ApiClient(String serverUrl, ScheduledExecutorService executor,
@@ -54,8 +55,8 @@ public class ApiClient {
 		log.debug("the server URL is " + this.serverUrl + " and the actuator URL is "
 			+ this.actuatorUrl);
 
-		this.executor.scheduleWithFixedDelay(this::monitorConnectedEndpoint, 0, this.monitorDelayInSeconds,
-			TimeUnit.SECONDS);
+		this.executor.scheduleWithFixedDelay(this::monitorConnectedEndpoint, 0,
+			this.monitorDelayInSeconds, TimeUnit.SECONDS);
 	}
 
 	private void monitorConnectedEndpoint() {
