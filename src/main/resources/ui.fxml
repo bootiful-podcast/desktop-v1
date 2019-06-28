@@ -58,7 +58,6 @@
             </VBox>
 
             <VBox fx:id="formIsProcessing"
-                  style="-fx-border-color: red"
                   alignment="CENTER">
                 <Label fx:id="processingLabel" text="Processing..."/>
                 <Hyperlink fx:id="downloadMediaHyperlink" text="Click Me"/>

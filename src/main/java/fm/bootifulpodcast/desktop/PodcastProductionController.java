@@ -10,10 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.SneakyThrows;
@@ -224,7 +221,7 @@ public class PodcastProductionController implements Initializable {
 		//  just to allow me to get on with the work of fixing the UI
 		//  once the publish button is submitted.
 		var ui = true;
-		if (ui)
+		if (ui) {
 			this.executor.execute(new Runnable() {
 
 				@Override
@@ -236,6 +233,7 @@ public class PodcastProductionController implements Initializable {
 						"http://localhost:8080/podcasts/526fdf4e-3747-4ff9-b423-c981405f10f0/output"));
 				}
 			});
+		}
 
 		if (!ui) {
 
@@ -270,18 +268,18 @@ public class PodcastProductionController implements Initializable {
 		hideEverything();
 		this.rootPane.getChildren().add(node);
 		node.setVisible(true);
-//		double height = this.rootPane.getHeight();
-	/*	if (node instanceof Region) {
-			((Region) node).setPrefHeight(height);
-		}*/
 	}
 
 	private void showProcessing() {
+
+
 		showNewScreenInPane(this.formIsProcessing);
 		Parent parent = this.formIsProcessing.getParent();
 		if (parent instanceof Region) {
 			var height = ((Region) parent).getHeight();
-			((Region) this.formIsProcessing).setPrefHeight(height);
+			Region formIsProcessing = (Region) this.formIsProcessing;
+			formIsProcessing.setPrefHeight(height);
+
 		}
 	}
 
@@ -301,6 +299,8 @@ public class PodcastProductionController implements Initializable {
 		this.introFileLabel.setText(this.pleaseSpecifyAFileLabelText);
 		this.descriptionPromptLabel.setText(this.descriptionLabelText);
 		this.newPodcast.setDisable(true);
+		this.downloadMediaHyperlink.setVisible(false);
+		this.processingLabel.setVisible(true);
 
 		this.showForm();
 	}
@@ -326,7 +326,10 @@ public class PodcastProductionController implements Initializable {
 		log.debug("URI for the media has returned " + uri.toString());
 		this.uri.set(uri);
 		Assert.notNull(uri, "the URI to download must not be null");
-		Platform.runLater(() -> this.downloadMediaHyperlink.setVisible(true));
+		Platform.runLater(() -> {
+			this.downloadMediaHyperlink.setVisible(true);
+			this.processingLabel.setVisible(false);
+		});
 	}
 
 	private void loadPodcastIntoForm(File mainIntro, File mainInterview, String description) {
@@ -392,8 +395,8 @@ public class PodcastProductionController implements Initializable {
 
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
-
 		this.processingLabel.setVisible(false);
+		VBox.setVgrow(this.formIsProcessing, Priority.ALWAYS);
 		this.downloadMediaHyperlink.setVisible(false);
 		this.downloadMediaHyperlink.setText(messages.getMessage("file-done-alert-message"));
 		this.downloadMediaHyperlink.setWrapText(true);
