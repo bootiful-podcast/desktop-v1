@@ -280,8 +280,7 @@ public class PodcastProductionController implements Initializable {
 		showNewScreenInPane(this.formIsProcessing);
 		Parent parent = this.formIsProcessing.getParent();
 		if (parent instanceof Region) {
-			var region = (Region) parent;
-			var height = region.getHeight();
+			var height = ((Region) parent).getHeight();
 			((Region) this.formIsProcessing).setPrefHeight(height);
 		}
 	}
