@@ -72,8 +72,7 @@ public class ProductionStatus {
 
 	public CompletableFuture<URI> checkStatus() {
 		Assert.notNull(this.executor, "the executor must not be null");
-		return CompletableFuture
-			.supplyAsync(this::doPollProductionStatus, this.executor);
+		return CompletableFuture.supplyAsync(this::doPollProductionStatus, this.executor);
 	}
 
 	@SneakyThrows

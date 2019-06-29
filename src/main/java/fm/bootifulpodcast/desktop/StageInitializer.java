@@ -20,13 +20,11 @@ class StageInitializer {
 
 	private final ApplicationContext applicationContext;
 
-	StageInitializer(
-		MessageSource messageSource,
-		Locale locale,
-		ApplicationContext applicationContext
-	) {
-		this.applicationTitle = messageSource.getMessage("ui-title", new Object[0], locale);
-		this.applicationContext = applicationContext;
+	StageInitializer(MessageSource messageSource, Locale locale,
+			ApplicationContext context) {
+		this.applicationTitle = messageSource.getMessage("ui-title", new Object[0],
+				locale);
+		this.applicationContext = context;
 	}
 
 	@EventListener
