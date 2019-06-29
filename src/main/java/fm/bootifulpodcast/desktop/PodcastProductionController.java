@@ -374,10 +374,9 @@ public class PodcastProductionController implements Initializable {
 			var alert = new Alert(Alert.AlertType.INFORMATION);
 			alert.setTitle(this.messages.getMessage("file-done-alert-title"));
 			alert.setHeaderText(null);
-			alert.setContentText(this.messages.getMessage("file-done-alert-message",
+			alert.setContentText(this.messages.getMessage("file-has-been-downloaded",
 				file.getAbsolutePath()));
 			alert.showAndWait();
-			this.discardPodcast();
 		});
 	}
 
