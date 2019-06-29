@@ -87,7 +87,7 @@ public class ProductionStatus {
 			var status = Objects.requireNonNull(result.getBody());
 			var key = "media-url";
 			if (status.containsKey(key)) {
-				return URI.create(this.rootServerUrl + status.get(key));
+				return URI.create(status.get(key));
 			}
 			else {
 				var seconds = 10;
