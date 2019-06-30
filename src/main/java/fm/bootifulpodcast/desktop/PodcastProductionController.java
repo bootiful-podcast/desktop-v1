@@ -94,6 +94,9 @@ public class PodcastProductionController implements Initializable {
 	public Label interviewLabel;
 
 	@FXML
+	public TextField title;
+
+	@FXML
 	public Label introFileLabel;
 
 	@FXML
@@ -187,9 +190,6 @@ public class PodcastProductionController implements Initializable {
 		this.interviewDandDText = messages.getMessage(dropTheMediaOnThePanelBundleCode,
 				this.interviewLabelText);
 	}
-
-	@FXML
-	public TextField title;
 
 	private void repaint() {
 		var descriptionText = this.description.getText();
