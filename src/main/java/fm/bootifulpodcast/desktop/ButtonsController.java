@@ -5,6 +5,7 @@ import fm.bootifulpodcast.desktop.client.ApiConnectedEvent;
 import fm.bootifulpodcast.desktop.client.ApiDisconnectedEvent;
 import javafx.application.Platform;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.UUID;
@@ -96,8 +98,10 @@ public class ButtonsController implements Initializable {
 	@EventListener
 	public void productionStarted(PodcastProductionStartedEvent ppse) {
 		Platform.runLater(() -> {
-			List.of(this.publishButton, this.newPodcastButton)
-					.forEach(btn -> btn.setDisable(true));
+			this.all.forEach(b -> b.setDisable(true));
+			this.resetButtonsUi();
+			this.buttons.getChildren().addAll(this.visibleDuringProcessing);
+
 		});
 	}
 
@@ -105,7 +109,10 @@ public class ButtonsController implements Initializable {
 	public void productionFinished(PodcastProductionCompletedEvent ppce) {
 		this.fileUri.set(ppce.getSource().getMedia());
 		Platform.runLater(() -> {
-			List.of(this.newPodcastButton).forEach(btn -> btn.setDisable(false));
+			this.resetButtonsUi();
+			var nodeList = this.visibleAfterProcessing;
+			nodeList.forEach(n -> n.setDisable(false));
+			this.buttons.getChildren().addAll(nodeList);
 		});
 	}
 
@@ -116,26 +123,38 @@ public class ButtonsController implements Initializable {
 		this.evaluatePublishButtonState();
 	}
 
-	@EventListener
-	public void processingCompleted(PodcastProductionCompletedEvent completed) {
-		Platform.runLater(() -> {
-			List.of(this.saveMediaToFileButton).forEach(btn -> btn.setDisable(false));
-			this.buttons.getChildren().clear();
-			this.buttons.getChildren().add(this.saveMediaToFileButton);
-		});
+	private void resetButtonsUi() {
+		this.buttons.getChildren().clear();
 	}
 
 	private void evaluatePublishButtonState() {
 		var canPublish = (this.connected.get() && this.podcast.get() != null);
-		publishButton.setDisable(!canPublish);
+		this.publishButton.setDisable(!canPublish);
 	}
+
+	private final List<Node> all = new ArrayList<>();
+
+	private final List<Node> visibleDuringForm = new ArrayList<>();
+
+	private final List<Node> visibleDuringProcessing = new ArrayList<>();
+
+	private final List<Node> visibleAfterProcessing = new ArrayList<>();
 
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
-		var children = this.buttons.getChildren();
-		children.forEach(n -> n.setDisable(true));
-		children.clear();
-		children.addAll(this.newPodcastButton, this.publishButton);
+
+		this.all.addAll(List.of(this.newPodcastButton, this.saveMediaToFileButton,
+				this.publishButton));
+		this.visibleAfterProcessing
+				.addAll(List.of(this.newPodcastButton, this.saveMediaToFileButton));
+		this.visibleDuringProcessing.addAll(List.of());
+		this.visibleDuringForm.addAll(List.of(this.newPodcastButton, this.publishButton));
+
+		this.resetButtonsUi();
+		this.buttons.getChildren().addAll(this.visibleDuringForm);
+
+		//
+		this.all.forEach(b -> b.setDisable(true));
 		this.newPodcastButton.setDisable(false);
 		this.connectedIcon.setGraphic(this.disconnectedImageView);
 		this.publishButton.setOnMouseClicked(e -> {
@@ -148,6 +167,7 @@ public class ButtonsController implements Initializable {
 		});
 		this.saveMediaToFileButton.setOnMouseClicked(
 				e -> this.handler.handle(this.stage.get(), this.fileUri.get()));
+
 	}
 
 }
