@@ -137,8 +137,14 @@ public class FormController implements Initializable {
 					HBox.setHgrow(label, Priority.ALWAYS);
 
 					var fileProperty = tuple.getT2();
-					fileProperty.addListener((observableValue, oldValue,
-							newValue) -> label.setText(newValue.getAbsolutePath()));
+					fileProperty.addListener((observableValue, oldValue, newValue) -> {
+						if (newValue != null) {
+							label.setText(newValue.getAbsolutePath());
+						}
+						else {
+							label.setText("");
+						}
+					});
 
 					var button = tuple.getT3();
 					button.setOnMouseClicked(e -> Optional

@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,12 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 public class ButtonsController implements Initializable {
 
+	public HBox buttons;
+
+	public VBox root;
+
+	public Button newPodcastButton, publishButton, saveMediaToFileButton;
+
 	public Label connectedIcon;
 
 	private final ImageView connectedImageView, disconnectedImageView;
@@ -42,18 +49,24 @@ public class ButtonsController implements Initializable {
 
 	private final ReadyFileHandler handler;
 
-	public Button newPodcastButton, publishButton, saveMediaToFileButton;
-
 	private final AtomicReference<URI> fileUri = new AtomicReference<URI>();
 
 	private final AtomicReference<Stage> stage = new AtomicReference<Stage>();
 
-	public HBox buttons;
+	private final List<Node> all = new ArrayList<>();
 
-	public VBox root;
+	private final List<Node> visibleDuringForm = new ArrayList<>();
 
-	ButtonsController(ApiClient client, ReadyFileHandler handler) {
+	private final List<Node> visibleDuringProcessing = new ArrayList<>();
+
+	private final List<Node> visibleAfterProcessing = new ArrayList<>();
+
+	private final ApplicationEventPublisher publisher;
+
+	ButtonsController(ApiClient client, ApplicationEventPublisher publisher,
+			ReadyFileHandler handler) {
 		this.client = client;
+		this.publisher = publisher;
 		this.handler = handler;
 		this.disconnectedImageView = FxUtils.buildImageViewFromResource(
 				new ClassPathResource("images/disconnected-icon.png"));
@@ -131,14 +144,6 @@ public class ButtonsController implements Initializable {
 		this.publishButton.setDisable(!canPublish);
 	}
 
-	private final List<Node> all = new ArrayList<>();
-
-	private final List<Node> visibleDuringForm = new ArrayList<>();
-
-	private final List<Node> visibleDuringProcessing = new ArrayList<>();
-
-	private final List<Node> visibleAfterProcessing = new ArrayList<>();
-
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
 
@@ -166,6 +171,9 @@ public class ButtonsController implements Initializable {
 		});
 		this.saveMediaToFileButton.setOnMouseClicked(
 				e -> this.handler.handle(this.stage.get(), this.fileUri.get()));
+
+		this.newPodcastButton.setOnMouseClicked(e -> this.publisher
+				.publishEvent(new PodcastLoadEvent(new PodcastModel())));
 
 	}
 
