@@ -2,6 +2,7 @@ package fm.bootifulpodcast.desktop.client;
 
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.util.Assert;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StreamUtils;
 import org.w3c.dom.Document;
@@ -42,7 +43,7 @@ public class PodcastArchiveBuilder {
 
 	@SneakyThrows
 	private static File doCreatePackage(String title, String description, String uid,
-			Media mp3, Media wav) {
+			Media mp3, Media wav, File destination) {
 
 		var staging = Files.createTempDirectory("staging").toFile();
 
@@ -53,7 +54,10 @@ public class PodcastArchiveBuilder {
 			log.debug("wrote " + xmlFile.getAbsolutePath() + " with content " + xml);
 		}
 
-		var zipFile = new File(staging, UUID.randomUUID().toString() + ".zip");
+		var zipFile = destination == null
+				? new File(staging, UUID.randomUUID().toString() + ".zip") : destination;
+		Assert.isTrue(zipFile.getName().endsWith(".zip"),
+				"the output file name for the archive must end in .zip");
 		var srcFiles = new ArrayList<File>();
 		srcFiles.add(xmlFile);
 		addMediaFilesToPackage(mp3, srcFiles);
@@ -128,8 +132,16 @@ public class PodcastArchiveBuilder {
 		files.add(m.getIntro());
 	}
 
-	public PodcastArchiveBuilder addMedia(String ext, File intro, File interv) {
+	private PodcastArchiveBuilder addMedia(String ext, File intro, File interv) {
 		return this.addMedia(ext, new Media(ext, intro, interv));
+	}
+
+	public PodcastArchiveBuilder addMp3Media(File intro, File interview) {
+		return this.addMedia(MP3_EXT, intro, interview);
+	}
+
+	public PodcastArchiveBuilder addWavMedia(File intro, File interview) {
+		return this.addMedia(WAV_EXT, intro, interview);
 	}
 
 	private PodcastArchiveBuilder addMedia(String ext, Media media) {
@@ -140,7 +152,14 @@ public class PodcastArchiveBuilder {
 	public File build() {
 		this.archivePackage = doCreatePackage(this.title, this.description, this.uid,
 				this.media.get(MP3_EXT).orElse(null),
-				this.media.get(WAV_EXT).orElse(null));
+				this.media.get(WAV_EXT).orElse(null), null);
+		return this.archivePackage;
+	}
+
+	public File build(File archiveDestination) {
+		this.archivePackage = doCreatePackage(this.title, this.description, this.uid,
+				this.media.get(MP3_EXT).orElse(null),
+				this.media.get(WAV_EXT).orElse(null), archiveDestination);
 		return this.archivePackage;
 	}
 

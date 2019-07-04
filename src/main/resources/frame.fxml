@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx/8.0.999-ea"
+            fx:controller="fm.bootifulpodcast.desktop.FrameController">
+
+    <center>
+        <VBox fx:id="activePanel">
+            <fx:include VBox.vgrow="ALWAYS" source="form.fxml" fx:id="form"/>
+            <fx:include VBox.vgrow="ALWAYS" source="progress-screen.fxml" fx:id="progressScreen"/>
+        </VBox>
+    </center>
+    <bottom>
+        <fx:include source="buttons.fxml" />
+    </bottom>
+</BorderPane>

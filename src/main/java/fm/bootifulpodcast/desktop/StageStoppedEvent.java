@@ -3,9 +3,9 @@ package fm.bootifulpodcast.desktop;
 import javafx.stage.Stage;
 import org.springframework.context.ApplicationEvent;
 
-public class StageReadyEvent extends ApplicationEvent {
+public class StageStoppedEvent extends ApplicationEvent {
 
-	public StageReadyEvent(Stage stage) {
+	public StageStoppedEvent(Stage stage) {
 		super(stage);
 	}
 

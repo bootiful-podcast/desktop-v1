@@ -3,3 +3,7 @@
     /*-fx-font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;*/
     -fx-font-size: larger;
 }
+
+.file-label {
+    -fx-text-alignment: right;
+}

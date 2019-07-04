@@ -30,11 +30,11 @@ class StageInitializer {
 	@EventListener
 	public void stageIsReady(StageReadyEvent sre) throws Exception {
 		var stage = sre.getSource();
-		var fxml = new ClassPathResource("/ui.fxml");
+		var fxml = new ClassPathResource("/frame.fxml");
 		var fxmlLoader = new FXMLLoader(fxml.getURL());
 		fxmlLoader.setControllerFactory(this.applicationContext::getBean);
 		var root = (Parent) fxmlLoader.load();
-		var scene = new Scene(root, 900, 400);
+		var scene = new Scene(root, 1000, 350);
 		scene.getStylesheets().add("/css/styles.css");
 		stage.setScene(scene);
 		stage.setTitle(this.applicationTitle);

@@ -22,4 +22,14 @@ class Messages {
 		return this.messageSource.getMessage(key, new Object[0], this.locale);
 	}
 
+	public String getMessage(Class<?> clzz, String key, Object... params) {
+		try {
+			return this.messageSource.getMessage(clzz.getSimpleName() + '.' + key, params,
+					this.locale);
+		}
+		catch (Exception e) {
+			return this.messageSource.getMessage(key, params, this.locale);
+		}
+	}
+
 }

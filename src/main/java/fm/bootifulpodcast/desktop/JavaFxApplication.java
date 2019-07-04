@@ -17,6 +17,8 @@ public class JavaFxApplication extends Application {
 
 	private ConfigurableApplicationContext context;
 
+	private final AtomicReference<Stage> stage = new AtomicReference<>();
+
 	@Override
 	public void init() {
 		ApplicationContextInitializer<GenericApplicationContext> initializer = context -> {
@@ -25,19 +27,22 @@ public class JavaFxApplication extends Application {
 			context.registerBean(HostServices.class, this::getHostServices);
 		};
 		this.context = new SpringApplicationBuilder()//
-				.sources(BootifulFxApplication.class)//
+				.sources(DesktopApplication.class)//
 				.initializers(initializer)//
 				.run(getParameters().getRaw().toArray(new String[0]));
 	}
 
 	@Override
 	public void start(Stage stage) {
-		this.context.publishEvent(new StageReadyEvent(stage));
+		this.stage.set(stage);
+		this.context.publishEvent(new StageReadyEvent(this.stage.get()));
 	}
 
 	@Override
 	public void stop() {
+		this.context.publishEvent(new StageStoppedEvent(this.stage.get()));
 		this.context.close();
+		this.stage.set(null);
 		Platform.exit();
 	}
 

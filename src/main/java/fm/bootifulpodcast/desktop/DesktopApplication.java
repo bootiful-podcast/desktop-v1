@@ -1,5 +1,6 @@
 package fm.bootifulpodcast.desktop;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fm.bootifulpodcast.desktop.client.ApiClient;
 import javafx.application.Application;
 import lombok.extern.log4j.Log4j2;
@@ -10,20 +11,33 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Log4j2
+@EnableAsync
 @SpringBootApplication
-public class BootifulFxApplication {
+public class DesktopApplication {
 
 	public static void main(String[] args) {
 		Application.launch(JavaFxApplication.class, args);
+	}
+
+	@Bean
+	ApiClient apiClient(@Value("${podcast.api.url}") String serverUrl,
+			@Value("${podcast.monitor.interval}") int interval, ObjectMapper om,
+			ApplicationEventPublisher publisher) {
+		return new ApiClient(serverUrl, om, executor(), publisher, restTemplate(),
+				interval);
 	}
 
 	@Bean
@@ -34,7 +48,6 @@ public class BootifulFxApplication {
 	@Bean
 	MessageSource messageSource() {
 		var utf8 = StandardCharsets.UTF_8.toString();
-		log.debug("default system encoding is: " + utf8);
 		var resourceBundleMessageSource = new ReloadableResourceBundleMessageSource();
 		resourceBundleMessageSource.setBasename("classpath:messages/labels");
 		resourceBundleMessageSource.setDefaultEncoding(utf8);
@@ -42,22 +55,18 @@ public class BootifulFxApplication {
 	}
 
 	@Bean
-	ApiClient apiClient(@Value("${podcast.monitor.interval}") int interval,
-			@Value("${podcast.api.url}") String apiUrl,
-			ScheduledExecutorService executorService, ApplicationEventPublisher publisher,
-			RestTemplate restTemplate) {
-		log.info("connecting to API endpoint: [" + apiUrl + ']');
-		return new ApiClient(apiUrl, executorService, publisher, restTemplate, interval);
-	}
-
-	@Bean
-	ScheduledExecutorService scheduledExecutorService() {
+	ScheduledExecutorService executor() {
 		return Executors.newScheduledThreadPool(threadPoolCount());
 	}
 
 	@Bean
-	Executor executor() {
-		return Executors.newFixedThreadPool(threadPoolCount());
+	TaskExecutor taskExecutor() {
+		return new ConcurrentTaskExecutor(executor());
+	}
+
+	@Bean
+	TaskScheduler taskScheduler() {
+		return new ConcurrentTaskScheduler(executor());
 	}
 
 	@Bean
