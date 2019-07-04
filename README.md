@@ -10,5 +10,7 @@ An experimental take on a desktop UI to support this use case.
 * Some sort of UI to open older podcasts for editing?
 
 ## Attributions
-* This program uses [the following Icon](http://chittagongit.com/icon/icon-connected-8.html) to indicate connectivity.
+* This program uses [this icon](http://chittagongit.com/icon/icon-connected-8.html) to indicate connectivity.
+* This program uses [this icon](https://loading.io/spinner/blocks/-rotating-squares-preloader-gif) to indicating progress.
+
     
