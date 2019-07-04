@@ -8,12 +8,12 @@ mkdir -p ${BP_DESKTOP}
 mvn -DskipTests=true spring-javaformat:apply clean package
 cp ${HERE}/target/desktop.jar ${BP_DESKTOP}
 cp ${HERE}/target/run.sh ${BP_DESKTOP}
-cd ${BP_DESKTOP}
+cd ${BP_DESKTOP}/target
 ls -la
-APPNAME="Bootiful Podcast"
+pwd
+APPNAME="BootifulPodcast"
 DIR="${APPNAME}.app/Contents/MacOS"
 mkdir -p "${DIR}"
 cp ${HERE}/run.sh "$DIR/$APPNAME"
 cp ${HERE}/target/desktop.jar "$DIR/$APPNAME"
 chmod +x "$DIR/$APPNAME"
-echo "$PWD/$APPNAME.app"
