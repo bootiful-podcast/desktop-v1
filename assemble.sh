@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
 
+mvn -DskipTests=true spring-javaformat:apply clean package
+
+
 HERE=$(cd `dirname $0` && pwd )
+
 echo $HERE
-export BP_DESKTOP=$HERE/target/package
+BP_DESKTOP=${HERE}/target/BP
+echo "BP_DESKTOP:  $BP_DESKTOP"
 rm -rf ${BP_DESKTOP}
 mkdir -p ${BP_DESKTOP}
-mvn -DskipTests=true spring-javaformat:apply clean package
-cp ${HERE}/target/desktop.jar ${BP_DESKTOP}
-cp ${HERE}/target/run.sh ${BP_DESKTOP}
-cd ${BP_DESKTOP}/target
+
+cp ${HERE}/target/desktop.jar ${BP_DESKTOP}/desktop.jar
+cp ${HERE}/run.sh ${BP_DESKTOP}/run.sh
+cd ${BP_DESKTOP}
 ls -la
 pwd
+
 APPNAME="BootifulPodcast"
-DIR="${APPNAME}.app/Contents/MacOS"
+DIR="${BP_DESKTOP}/${APPNAME}.app/Contents/MacOS"
 mkdir -p "${DIR}"
 cp ${HERE}/run.sh "$DIR/$APPNAME"
-cp ${HERE}/target/desktop.jar "$DIR/$APPNAME"
+cp ${HERE}/target/desktop.jar "$DIR/desktop.jar"
 chmod +x "$DIR/$APPNAME"
