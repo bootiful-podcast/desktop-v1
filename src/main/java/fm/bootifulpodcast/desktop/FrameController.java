@@ -47,6 +47,11 @@ public class FrameController implements Initializable {
 	}
 
 	@EventListener
+	public void newPodcast(PodcastLoadEvent ple) {
+		show(this.form);
+	}
+
+	@EventListener
 	public void podcastCompleted(PodcastProductionCompletedEvent ding) {
 
 		log.info("the podcast has been completed and is available for download at "
@@ -64,10 +69,12 @@ public class FrameController implements Initializable {
 	}
 
 	private void show(Node node) {
-		Platform.runLater(() -> {
-			this.activePanel.getChildren().clear();
-			this.activePanel.getChildren().add(node);
-		});
+		if (null != node) {
+			Platform.runLater(() -> {
+				this.activePanel.getChildren().clear();
+				this.activePanel.getChildren().add(node);
+			});
+		}
 	}
 
 }

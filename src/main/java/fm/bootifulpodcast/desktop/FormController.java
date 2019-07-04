@@ -175,6 +175,7 @@ public class FormController implements Initializable {
 					.setValue(source.interviewFileProperty().getValue());
 			this.podcastModel.introductionFileProperty()
 					.setValue(source.introductionFileProperty().getValue());
+
 		});
 	}
 

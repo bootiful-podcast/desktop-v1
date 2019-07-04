@@ -118,6 +118,11 @@ public class ButtonsController implements Initializable {
 	}
 
 	@EventListener
+	public void onNewPodcast(PodcastLoadEvent ple) {
+		this.newPodcastLoaded();
+	}
+
+	@EventListener
 	public void productionFinished(PodcastProductionCompletedEvent ppce) {
 		this.fileUri.set(ppce.getSource().getMedia());
 		Platform.runLater(() -> {
@@ -144,6 +149,13 @@ public class ButtonsController implements Initializable {
 		this.publishButton.setDisable(!canPublish);
 	}
 
+	private void newPodcastLoaded() {
+		if (null != this.buttons) {
+			this.resetButtonsUi();
+			this.buttons.getChildren().addAll(this.visibleDuringForm);
+		}
+	}
+
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
 
@@ -154,8 +166,7 @@ public class ButtonsController implements Initializable {
 		this.visibleDuringProcessing.addAll(List.of());
 		this.visibleDuringForm.addAll(List.of(this.newPodcastButton, this.publishButton));
 
-		this.resetButtonsUi();
-		this.buttons.getChildren().addAll(this.visibleDuringForm);
+		this.newPodcastLoaded();
 
 		//
 		this.all.forEach(b -> b.setDisable(true));

@@ -78,6 +78,11 @@ public class ProgressController implements Initializable, EventHandler<MouseEven
 		});
 	}
 
+	@EventListener
+	public void processing(PodcastProductionStartedEvent started) {
+		Platform.runLater(() -> this.show(this.loading));
+	}
+
 	private void show(Collection<Node> nodes) {
 		this.root.getChildren().clear();
 		nodes.forEach(n -> n.setVisible(true));
