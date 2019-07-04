@@ -1,18 +1,13 @@
 package fm.bootifulpodcast.desktop.client;
 
-import org.springframework.context.ApplicationEvent;
+import fm.bootifulpodcast.desktop.GenericApplicationEvent;
 
 import java.util.Date;
 
-public class ApiDisconnectedEvent extends ApplicationEvent {
+public class ApiDisconnectedEvent extends GenericApplicationEvent<Date> {
 
 	ApiDisconnectedEvent() {
 		super(new Date());
-	}
-
-	@Override
-	public Date getSource() {
-		return (Date) super.getSource();
 	}
 
 }

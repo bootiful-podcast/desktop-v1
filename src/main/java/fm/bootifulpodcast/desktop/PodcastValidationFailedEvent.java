@@ -1,16 +1,9 @@
 package fm.bootifulpodcast.desktop;
 
-import org.springframework.context.ApplicationEvent;
-
-public class PodcastValidationFailedEvent extends ApplicationEvent {
+public class PodcastValidationFailedEvent extends GenericApplicationEvent<PodcastModel> {
 
 	PodcastValidationFailedEvent(PodcastModel source) {
 		super(source);
-	}
-
-	@Override
-	public PodcastModel getSource() {
-		return (PodcastModel) super.getSource();
 	}
 
 }
