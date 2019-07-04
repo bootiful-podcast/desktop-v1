@@ -101,7 +101,6 @@ public class ButtonsController implements Initializable {
 			this.all.forEach(b -> b.setDisable(true));
 			this.resetButtonsUi();
 			this.buttons.getChildren().addAll(this.visibleDuringProcessing);
-
 		});
 	}
 
