@@ -1,5 +1,6 @@
 target/
 pom.xml.tag
+.DS_Store
 pom.xml.releaseBackup
 pom.xml.versionsBackup
 pom.xml.next
