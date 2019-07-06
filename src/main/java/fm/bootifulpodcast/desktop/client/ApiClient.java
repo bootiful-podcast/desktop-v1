@@ -99,7 +99,8 @@ public class ApiClient {
 		try {
 			var response = this.restTemplate.getForEntity(this.actuatorUrl, String.class);
 			var responseBody = response.getBody();
-			log.debug("Response from Actuator status endpoint: " + responseBody);
+			log.debug("Response from Actuator status endpoint (" + this.actuatorUrl
+					+ "): " + responseBody);
 			Map<String, Object> jsonMap = Objects.requireNonNull(objectMapper
 					.readValue(responseBody, new TypeReference<Map<String, Object>>() {
 					}));

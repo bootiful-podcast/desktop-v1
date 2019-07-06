@@ -19,16 +19,17 @@ class Demo {
 	public void loadSampleData() {
 
 		var root = new File(
-				"/Users/joshlong/Desktop/bootiful-podcast/sample-podcast-assets/oleg-zhurakousky");
-		var intro = new File(root, "1-oleg-intro.mp3");
-		var interview = new File(root, "2-oleg-interview-lower.mp3");
+				"/Users/joshlong/Dropbox/spring-cast/published/venkat-subramaniam-may-27-2019/production/wavs/");
+		var intro = new File(root, "intro.mp3");
+		var interview = new File(root, "interview.mp3");
 
 		var podcast = new PodcastModel();
 		podcast.introductionFileProperty().set(intro);
 		podcast.interviewFileProperty().set(interview);
-		podcast.titleProperty().setValue("Josh talks to Oleg Zhurakousky");
+		podcast.titleProperty().setValue(
+				"Josh Long (@starbuxman) talks to Dr. Venkat Subramaniam (@venkat_s).");
 		podcast.descriptionProperty()
-				.setValue("Josh talks to Oleg Zhurakousky and it awesome!");
+				.setValue("Josh Long (@starbuxman) talks to Dr. Venkat Subramaniam.");
 		this.publisher.publishEvent(new PodcastLoadEvent(podcast));
 	}
 

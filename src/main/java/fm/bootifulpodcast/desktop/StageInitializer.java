@@ -38,8 +38,8 @@ class StageInitializer {
 		scene.getStylesheets().add("/css/styles.css");
 		stage.setScene(scene);
 		stage.setTitle(this.applicationTitle);
-		stage.centerOnScreen();
 		stage.show();
+		stage.centerOnScreen();
 
 	}
 
