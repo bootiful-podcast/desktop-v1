@@ -3,6 +3,8 @@ package fm.bootifulpodcast.desktop;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
@@ -39,8 +41,17 @@ class StageInitializer {
 		stage.setScene(scene);
 		stage.setTitle(this.applicationTitle);
 		stage.show();
-		stage.centerOnScreen();
+		this.center(stage);
 
+	}
+
+	private void center(Stage stage) {
+		// stage.centerOnScreen();
+		// var screenBoundsRectangle =
+		// GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+		var screenBoundsRectangle = Screen.getPrimary().getVisualBounds(); // Screen.getPrimary().getBounds();
+		stage.setX((screenBoundsRectangle.getWidth() / 2) - (stage.getWidth() / 2));
+		stage.setY((screenBoundsRectangle.getHeight() / 2) - (stage.getHeight() / 2));
 	}
 
 }
