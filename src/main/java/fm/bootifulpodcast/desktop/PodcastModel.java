@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 @Value
 @Accessors(fluent = true)
-class PodcastModel {
+public class PodcastModel {
 
 	private final SimpleObjectProperty<File> introductionFileProperty = new SimpleObjectProperty<>();
 

@@ -35,17 +35,20 @@ public class ButtonsController implements Initializable {
 
 	public VBox root;
 
-	public Button newPodcastButton, publishButton, saveMediaToFileButton;
+	public Button newPodcastButton, publishButton, saveMediaToFileButton,
+			stopMonitoringButton;
 
 	public Label connectedIcon;
 
 	private final ImageView connectedImageView, disconnectedImageView;
 
+	private final ApiClient client;
+
+	private final Messages messages;
+
 	private final AtomicBoolean connected = new AtomicBoolean(false);
 
 	private final AtomicReference<PodcastModel> podcast = new AtomicReference<>();
-
-	private final ApiClient client;
 
 	private final ReadyFileHandler handler;
 
@@ -63,9 +66,12 @@ public class ButtonsController implements Initializable {
 
 	private final ApplicationEventPublisher publisher;
 
-	ButtonsController(ApiClient client, ApplicationEventPublisher publisher,
-			ReadyFileHandler handler) {
+	private final AtomicReference<String> currentUri = new AtomicReference<>();
+
+	ButtonsController(ApiClient client, Messages msgs,
+			ApplicationEventPublisher publisher, ReadyFileHandler handler) {
 		this.client = client;
+		this.messages = msgs;
 		this.publisher = publisher;
 		this.handler = handler;
 		this.disconnectedImageView = FxUtils.buildImageViewFromResource(
@@ -110,16 +116,18 @@ public class ButtonsController implements Initializable {
 
 	@EventListener
 	public void productionStarted(PodcastProductionStartedEvent ppse) {
+		this.currentUri.set(ppse.getSource());
 		Platform.runLater(() -> {
-			this.all.forEach(b -> b.setDisable(true));
+			// this.all.forEach(b -> b.setDisable(true));
 			this.resetButtonsUi();
+			this.visibleDuringProcessing.forEach(b -> b.setDisable(false));
 			this.buttons.getChildren().addAll(this.visibleDuringProcessing);
 		});
 	}
 
 	@EventListener
 	public void onNewPodcast(PodcastLoadEvent ple) {
-		this.newPodcastLoaded();
+		Platform.runLater(this::newPodcastLoaded);
 	}
 
 	@EventListener
@@ -159,11 +167,18 @@ public class ButtonsController implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
 
-		this.all.addAll(List.of(this.newPodcastButton, this.saveMediaToFileButton,
-				this.publishButton));
+		var clzz = ButtonsController.class;
+		this.stopMonitoringButton
+				.setText(this.messages.getMessage(clzz, "stop-monitoring"));
+		this.newPodcastButton.setText(this.messages.getMessage(clzz, "new-podcast"));
+		this.saveMediaToFileButton.setText(this.messages.getMessage(clzz, "save-media"));
+		this.publishButton.setText(this.messages.getMessage(clzz, "publish"));
+
+		this.all.addAll(List.of(this.newPodcastButton, this.stopMonitoringButton,
+				this.saveMediaToFileButton, this.publishButton));
 		this.visibleAfterProcessing
 				.addAll(List.of(this.newPodcastButton, this.saveMediaToFileButton));
-		this.visibleDuringProcessing.addAll(List.of());
+		this.visibleDuringProcessing.addAll(List.of(this.stopMonitoringButton));
 		this.visibleDuringForm.addAll(List.of(this.newPodcastButton, this.publishButton));
 
 		this.newPodcastLoaded();
@@ -186,6 +201,8 @@ public class ButtonsController implements Initializable {
 		this.newPodcastButton.setOnMouseClicked(e -> this.publisher
 				.publishEvent(new PodcastLoadEvent(new PodcastModel())));
 
+		this.stopMonitoringButton.setOnMouseClicked(e -> this.publisher.publishEvent(
+				new PodcastProductionMonitoringStopEvent(this.currentUri.get())));
 	}
 
 }

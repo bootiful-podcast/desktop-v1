@@ -2,9 +2,7 @@ package fm.bootifulpodcast.desktop.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fm.bootifulpodcast.desktop.PodcastProductionCompletedEvent;
-import fm.bootifulpodcast.desktop.PodcastProductionStartedEvent;
-import fm.bootifulpodcast.desktop.StageReadyEvent;
+import fm.bootifulpodcast.desktop.*;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,7 +28,9 @@ import java.net.SocketException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,6 +51,12 @@ public class ApiClient {
 	private final String serverUrl, actuatorUrl;
 
 	private final int monitorDelayInSeconds;
+
+	/*
+	 * the client will poll for the status of a given submission for as long as there's an
+	 * entry (with the UID as the key) in this {@link Map}.
+	 */
+	private final Map<String, AtomicBoolean> pollMap = new ConcurrentHashMap<>();
 
 	public ApiClient(String serverUrl, ObjectMapper om, ScheduledExecutorService executor,
 			ApplicationEventPublisher publisher, RestTemplate restTemplate,
@@ -95,6 +101,11 @@ public class ApiClient {
 				this.monitorDelayInSeconds, TimeUnit.SECONDS);
 	}
 
+	@EventListener
+	public void monitorStopRequested(PodcastProductionMonitoringStopEvent req) {
+		this.pollMap.remove(req.getSource());
+	}
+
 	private void monitorConnectedEndpoint() {
 		try {
 			var response = this.restTemplate.getForEntity(this.actuatorUrl, String.class);
@@ -121,6 +132,14 @@ public class ApiClient {
 		}
 	}
 
+	/*
+	 * This method submits a new request. It the polls the status endpoint for any
+	 * updates. Eventually, it'll return a URI which we then advertise. This new event
+	 * forces the UI to show a download link. It's possible to publish an event and cancel
+	 * the monitoring. In this case, the polling method will return a {@code null}. If
+	 * it's {@code null}, then we publish an event to reset the UI by loading an empty
+	 * podcast.
+	 */
 	@Async
 	public void produce(String uid, String title, String description, File introduction,
 			File interview) {
@@ -128,8 +147,14 @@ public class ApiClient {
 		var archive = this.createArchive(uid, title, description, introduction,
 				interview);
 		try {
-			var uri = this.submitForProduction(uid, archive);
-			this.publisher.publishEvent(new PodcastProductionCompletedEvent(uid, uri));
+			Optional//
+					.ofNullable(this.submitForProduction(uid, archive))//
+					.ifPresentOrElse(
+							uri -> this.publisher.publishEvent(
+									new PodcastProductionCompletedEvent(uid, uri)),
+							() -> this.publisher.publishEvent(
+									new PodcastLoadEvent(new PodcastModel())));
+			;
 		}
 		finally {
 			Assert.isTrue(!archive.exists() || archive.delete(),
@@ -140,8 +165,9 @@ public class ApiClient {
 
 	private File createArchive(String uuid, String title, String description, File intro,
 			File interview) {
-		return new PodcastArchiveBuilder(title, description, uuid)
-				.addMp3Media(intro, interview).build();
+		return new PodcastArchiveBuilder(title, description, uuid)//
+				.addMp3Media(intro, interview)//
+				.build();
 	}
 
 	private URI submitForProduction(String uid, File archive) {
@@ -152,18 +178,20 @@ public class ApiClient {
 		body.add("file", resource);
 		var requestEntity = new HttpEntity<MultiValueMap<String, Object>>(body, headers);
 		var url = this.serverUrl + "/podcasts/" + uid;
-		var response = restTemplate.postForEntity(url, requestEntity, String.class);
+		var response = this.restTemplate.postForEntity(url, requestEntity, String.class);
 		var location = response.getHeaders().getLocation();
 		Assert.notNull(location, "The location URI must be non-null");
 		var uri = URI.create(this.serverUrl + location.getPath());
-		return this.pollProductionStatus(uri);
+		this.pollMap.put(uid, new AtomicBoolean(true));
+		return this.pollProductionStatus(uid, uri);
 	}
 
 	@SneakyThrows
-	private URI pollProductionStatus(URI statusUrl) {
+	private URI pollProductionStatus(String uid, URI statusUrl) {
 		var parameterizedTypeReference = new ParameterizedTypeReference<Map<String, String>>() {
 		};
-		while (true) {
+		while (this.pollMap.getOrDefault(uid, new AtomicBoolean(false)).get()) {
+			log.debug("the pollMap had '" + uid + "' " + "as true");
 			var result = this.restTemplate.exchange(statusUrl, HttpMethod.GET, null,
 					parameterizedTypeReference);
 			Assert.isTrue(result.getStatusCode().is2xxSuccessful(),
@@ -181,6 +209,8 @@ public class ApiClient {
 						+ "'.");
 			}
 		}
+		log.debug("the pollMap had '" + uid + "' " + "as false. Returning.");
+		return null;
 	}
 
 }

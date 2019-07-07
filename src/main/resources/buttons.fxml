@@ -23,11 +23,10 @@
         </left>
         <right>
             <HBox fx:id="buttons" alignment="CENTER_RIGHT" spacing="10">
-
+                <Button fx:id="stopMonitoringButton" text="Stop Monitoring"/>
                 <Button fx:id="publishButton" text="Publish"/>
                 <Button fx:id="newPodcastButton" text="New Podcast"/>
                 <Button fx:id="saveMediaToFileButton" text="Save File"/>
-
             </HBox>
         </right>
     </BorderPane>
