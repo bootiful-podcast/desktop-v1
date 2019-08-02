@@ -28,6 +28,7 @@ public class JavaFxApplication extends Application {
 		};
 		this.context = new SpringApplicationBuilder()//
 				.sources(DesktopApplication.class)//
+				.headless(false)//
 				.initializers(initializer)//
 				.run(getParameters().getRaw().toArray(new String[0]));
 	}
