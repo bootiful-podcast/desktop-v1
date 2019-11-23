@@ -11,6 +11,6 @@ An experimental take on a desktop UI to support this use case.
 
 ## Attributions
 * This program uses [this icon](http://chittagongit.com/icon/icon-connected-8.html) to indicate connectivity.
-* This program uses [this icon](https://loading.io/spinner/blocks/-rotating-squares-preloader-gif) to indicating progress.
+* This program uses [this icon](https://loading.io/spinner/blocks/-rotating-squares-preloader-gif) to indicate progress.
 
     
