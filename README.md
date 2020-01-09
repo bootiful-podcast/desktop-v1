@@ -1,6 +1,14 @@
 # BootifulPodcast.fm Desktop Client
 
-An experimental take on a desktop UI to support this use case.
+An experimental take on a desktop UI to the podcast publication usecase. 
+
+In order to run this you'll need to run [the API server](https://github.com/bootiful-podcast/api). 
+
+In order to run this you'll need to run [the Python-based Processor](https://github.com/bootiful-podcast/processor).
+
+In order to run this you'll want to run [the Site Generator, which then updates a local copy of the website](https://github.com/bootiful-podcast/site-generator).
+ 
+You can run this with a `spring.profiles.active=dev` to activate the `dev` profile and preload a `Podcast` instance to load. It depends on files for a particular real, past, podcast residing in your `$HOME/Dropbox/` folder.  
 
 ## To Do
 * Show a publication progress bar (animated gif?) while it's being processed by the service.

@@ -156,7 +156,6 @@ public class FormController implements Initializable {
 		this.podcastModel.titleProperty().addListener(this::onChange);
 		this.podcastModel.interviewFileProperty().addListener(this::onChange);
 		this.podcastModel.introductionFileProperty().addListener(this::onChange);
-
 	}
 
 	private Tuple3<Label, SimpleObjectProperty<File>, Button> fileSelectionTuple(
