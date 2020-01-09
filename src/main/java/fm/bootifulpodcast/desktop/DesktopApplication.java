@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Log4j2
-@EnableAsync
+@EnableAsync 
 @SpringBootApplication
 public class DesktopApplication {
 
