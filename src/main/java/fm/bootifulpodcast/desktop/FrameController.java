@@ -17,12 +17,6 @@ import java.util.concurrent.Executor;
 @Component
 public class FrameController implements Initializable {
 
-	private final ApplicationEventPublisher publisher;
-
-	private final Executor executor;
-
-	private final Messages messages;
-
 	public Node progressScreen;
 
 	public Node form;
@@ -37,13 +31,6 @@ public class FrameController implements Initializable {
 	@EventListener
 	public void stageFinished(StageStoppedEvent sse) {
 		log.info("stage is finished");
-	}
-
-	FrameController(Executor executor, ApplicationEventPublisher publisher,
-			Messages messages) {
-		this.messages = messages;
-		this.publisher = publisher;
-		this.executor = executor;
 	}
 
 	@EventListener
