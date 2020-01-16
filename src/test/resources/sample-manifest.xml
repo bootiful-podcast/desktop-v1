@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<podcast description="a description" title="a title" uid="a-uid">
+    <mp3 interview="interview.mp3" intro="intro.mp3"/>
+
+</podcast>

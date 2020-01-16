@@ -16,6 +16,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -82,17 +83,34 @@ public class PodcastArchiveBuilder {
 
 		var doc = docBuilder.newDocument();
 		var rootElement = doc.createElement("podcast");
-		rootElement.setAttribute("description", description);
-		rootElement.setAttribute("title", title);
 		rootElement.setAttribute("uid", uid);
+		rootElement.setAttribute("title", title);
 		doc.appendChild(rootElement);
 
-		var mp3Element = createElementWithAttributes(doc, "mp3",
-				Map.of("intro", intro.getName(), "interview", interview.getName()));
+		/**
+		 * <podcast uid = "uid" title = "A Title">
+		 *
+		 * <interview src = "/some.mp3" /> <introduction src = "/some.mp3" />
+		 *
+		 * <photo src = "/some/file.jpg"/>
+		 *
+		 * <description> CDATA text </description>
+		 *
+		 * </podcast>
+		 */
+
+		var interviewElement = createElementWithAttributes(doc, "interview",
+				Map.of("src", interview.getName()));
+		var introductionElement = createElementWithAttributes(doc, "introduction",
+				Map.of("src", intro.getName()));
 		var photoElement = createElementWithAttributes(doc, "photo",
-				Map.of("profile", photo.getName()));
-		rootElement.appendChild(mp3Element);
-		rootElement.appendChild(photoElement);
+				Map.of("src", photo.getName()));
+
+		var descriptionElement = doc.createElement("description");
+		descriptionElement.appendChild(doc.createCDATASection(description));
+
+		Arrays.asList(interviewElement, introductionElement, photoElement,
+				descriptionElement).forEach(rootElement::appendChild);
 
 		var transformerFactory = TransformerFactory.newInstance();
 
