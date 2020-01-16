@@ -3,6 +3,7 @@ package fm.bootifulpodcast.desktop;
 import javafx.application.Platform;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEventPublisher;
@@ -22,6 +23,8 @@ public class FrameController implements Initializable {
 	public Node form;
 
 	public VBox activePanel;
+
+	public ImageView photoImageView;
 
 	@EventListener
 	public void stageReady(StageReadyEvent sre) {

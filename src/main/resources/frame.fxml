@@ -2,6 +2,8 @@
 
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.image.ImageView?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             xmlns="http://javafx.com/javafx/8.0.999-ea"
             fx:controller="fm.bootifulpodcast.desktop.FrameController">
@@ -12,7 +14,8 @@
             <fx:include VBox.vgrow="ALWAYS" source="progress-screen.fxml" fx:id="progressScreen"/>
         </VBox>
     </center>
+
     <bottom>
-        <fx:include source="buttons.fxml" />
+        <fx:include source="buttons.fxml"/>
     </bottom>
 </BorderPane>

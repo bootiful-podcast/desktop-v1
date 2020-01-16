@@ -141,7 +141,7 @@ public class ApiClient {
 	 * podcast.
 	 */
 	@Async
-	public void produce(String uid, String title, String description, File introduction,
+	public void publish(String uid, String title, String description, File introduction,
 			File interview) {
 		this.publisher.publishEvent(new PodcastProductionStartedEvent(uid));
 		var archive = this.createArchive(uid, title, description, introduction,

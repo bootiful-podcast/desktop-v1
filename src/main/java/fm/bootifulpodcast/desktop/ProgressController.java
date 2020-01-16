@@ -1,6 +1,5 @@
 package fm.bootifulpodcast.desktop;
 
-import fm.bootifulpodcast.desktop.client.ApiClient;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
@@ -32,8 +31,6 @@ public class ProgressController implements Initializable, EventHandler<MouseEven
 
 	private final AtomicReference<Stage> stage = new AtomicReference<Stage>();
 
-	private final ApiClient client;
-
 	public Label processingLabel;
 
 	public Hyperlink downloadMediaHyperlink;
@@ -48,10 +45,9 @@ public class ProgressController implements Initializable, EventHandler<MouseEven
 
 	private final List<Node> loaded = new ArrayList<>();
 
-	public ProgressController(Messages messages, ReadyFileHandler rfh, ApiClient client) {
+	public ProgressController(Messages messages, ReadyFileHandler rfh) {
 		this.messages = messages;
 		this.handler = rfh;
-		this.client = client;
 	}
 
 	@Override

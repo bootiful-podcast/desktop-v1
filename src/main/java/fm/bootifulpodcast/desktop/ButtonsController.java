@@ -190,7 +190,7 @@ public class ButtonsController implements Initializable {
 		this.publishButton.setOnMouseClicked(e -> {
 			var model = this.podcast.get();
 			var uuid = UUID.randomUUID().toString();
-			this.client.produce(uuid, model.titleProperty().get(),
+			this.client.publish(uuid, model.titleProperty().get(),
 					model.descriptionProperty().get(),
 					model.introductionFileProperty().get(),
 					model.interviewFileProperty().get());

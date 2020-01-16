@@ -36,13 +36,12 @@ class StageInitializer {
 		var fxmlLoader = new FXMLLoader(fxml.getURL());
 		fxmlLoader.setControllerFactory(this.applicationContext::getBean);
 		var root = (Parent) fxmlLoader.load();
-		var scene = new Scene(root, 1000, 350);
+		var scene = new Scene(root, 1100, 500);
 		scene.getStylesheets().add("/css/styles.css");
 		stage.setScene(scene);
 		stage.setTitle(this.applicationTitle);
 		stage.show();
 		this.center(stage);
-
 	}
 
 	private void center(Stage stage) {

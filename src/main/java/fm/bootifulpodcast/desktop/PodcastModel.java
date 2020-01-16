@@ -15,6 +15,8 @@ public class PodcastModel {
 
 	private final SimpleObjectProperty<File> introductionFileProperty = new SimpleObjectProperty<>();
 
+	private final SimpleObjectProperty<File> photoFileProperty = new SimpleObjectProperty<>();
+
 	private final SimpleObjectProperty<File> interviewFileProperty = new SimpleObjectProperty<>();
 
 	private final StringProperty titleProperty = new SimpleStringProperty();
@@ -27,7 +29,8 @@ public class PodcastModel {
 		Function<File, String> fileToString = file -> file == null ? ""
 				: file.getAbsolutePath();
 
-		return "PodcastModel{" + "introductionFile="
+		return "PodcastModel{" + "photoFile="
+				+ fileToString.apply(photoFileProperty.get()) + ", introductionFile="
 				+ fileToString.apply(introductionFileProperty.get()) + ", interviewFile="
 				+ fileToString.apply(interviewFileProperty.get()) + ", title="
 				+ titleProperty.get() + ", description=" + descriptionProperty.get()

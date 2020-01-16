@@ -2,12 +2,14 @@ package fm.bootifulpodcast.desktop;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.TextAlignment;
@@ -16,14 +18,17 @@ import javafx.stage.Stage;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
+import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
 import java.io.File;
 import java.net.URL;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -34,6 +39,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class FormController implements Initializable {
 
 	public Label interviewFileLabel;
+
+	public Label photoLabel;
 
 	public Label introFileLabel;
 
@@ -47,13 +54,19 @@ public class FormController implements Initializable {
 
 	public Label introLabel;
 
+	public Label photoFileLabel;
+
 	public Label interviewLabel;
+
+	public Label filePromptLabel;
 
 	public Button introFileChooserButton;
 
+	public Button photoFileChooserButton;
+
 	public Button interviewFileChooserButton;
 
-	public Label filePromptLabel;
+	public ImageView photoImageView;
 
 	private final AtomicReference<Stage> stage = new AtomicReference<>();
 
@@ -65,16 +78,21 @@ public class FormController implements Initializable {
 
 	private final ApplicationEventPublisher publisher;
 
-	private final FileChooser fileChooser;
+	private final FileChooser mp3FileChooser, imageFileChooser;
 
 	FormController(Messages messages, ApplicationEventPublisher publisher) {
 		this.messages = messages;
 		this.publisher = publisher;
+		this.imageFileChooser = this.initializeFileChooseFor("*.png", "*.jpg");
+		this.mp3FileChooser = this.initializeFileChooseFor("*.mp3");
+	}
 
-		this.fileChooser = new FileChooser();
-		this.fileChooser.setTitle(messages.getMessage(getClass(), "file-chooser-title"));
-		this.fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
-				messages.getMessage(getClass(), "file-chooser-description"), "*.mp3"));
+	private FileChooser initializeFileChooseFor(String... exts) {
+		var fileChooser = new FileChooser();
+		fileChooser.setTitle(messages.getMessage(getClass(), "file-chooser-title"));
+		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+				messages.getMessage(getClass(), "file-chooser-description"), exts));
+		return fileChooser;
 	}
 
 	@EventListener
@@ -87,21 +105,26 @@ public class FormController implements Initializable {
 		var intro = model.introductionFileProperty().get();
 		var interview = model.interviewFileProperty().get();
 		var description = model.descriptionProperty().get();
+		var profilePhoto = model.photoFileProperty().get();
 		var title = model.titleProperty().get();
 		var wasValidBefore = this.valid.get();
 		var isValidNow = (StringUtils.hasText(title) && StringUtils.hasText(description)
-				&& intro != null && interview != null);
+				&& intro != null && interview != null && profilePhoto != null);
 		this.valid.set(isValidNow);
+		this.repaintProfilePhotoFile(model.photoFileProperty().get());
 		if (wasValidBefore != isValidNow) { // if they are different
 			var event = isValidNow ? new PodcastValidationSuccessEvent(model)
 					: new PodcastValidationFailedEvent(model);
 			this.publisher.publishEvent(event);
 		}
-
 	}
 
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
+
+		var dimension = 200;
+		this.photoImageView.setPreserveRatio(true);
+		this.photoImageView.setFitHeight(dimension);
 
 		this.titlePromptLabel
 				.setText(this.messages.getMessage(getClass(), "title-prompt"));
@@ -109,16 +132,20 @@ public class FormController implements Initializable {
 				.setText(this.messages.getMessage(getClass(), "description-prompt"));
 		this.filePromptLabel.setText(this.messages.getMessage(getClass(), "file-prompt"));
 
-		List.of(this.interviewFileLabel, this.introFileLabel).forEach(label -> label
-				.setText(this.messages.getMessage(getClass(), "no-file-selected")));
+		List.of(this.interviewFileLabel, this.photoFileLabel, this.introFileLabel)
+				.forEach(label -> label.setText(
+						this.messages.getMessage(getClass(), "no-file-selected")));
 
-		List.of(this.interviewFileChooserButton, this.introFileChooserButton).forEach(
-				btn -> btn.setText(this.messages.getMessage(getClass(), "choose-file")));
+		List.of(this.interviewFileChooserButton, this.photoFileChooserButton,
+				this.introFileChooserButton)
+				.forEach(btn -> btn
+						.setText(this.messages.getMessage(getClass(), "choose-file")));
 
 		this.introLabel
 				.setText(this.messages.getMessage(getClass(), "introduction-file"));
 		this.interviewLabel
 				.setText(this.messages.getMessage(getClass(), "interview-file"));
+		this.photoLabel.setText(this.messages.getMessage(getClass(), "photo-file"));
 
 		this.title.textProperty().bindBidirectional(this.podcastModel.titleProperty());
 		this.description.textProperty()
@@ -126,29 +153,33 @@ public class FormController implements Initializable {
 
 		List.of(fileSelectionTuple(this.interviewFileLabel,
 				this.podcastModel.interviewFileProperty(),
-				this.interviewFileChooserButton),
+				this.interviewFileChooserButton, this.mp3FileChooser),
 				fileSelectionTuple(this.introFileLabel,
 						this.podcastModel.introductionFileProperty(),
-						this.introFileChooserButton))
+						this.introFileChooserButton, this.mp3FileChooser),
+				fileSelectionTuple(this.photoFileLabel,
+						this.podcastModel.photoFileProperty(),
+						this.photoFileChooserButton, this.imageFileChooser))
 				.forEach(tuple -> {
 					var label = tuple.getT1();
 					label.setTextAlignment(TextAlignment.RIGHT);
 					label.setAlignment(Pos.CENTER_RIGHT);
 					HBox.setHgrow(label, Priority.ALWAYS);
-
 					var fileProperty = tuple.getT2();
-					fileProperty.addListener((observableValue, oldValue, newValue) -> {
-						if (newValue != null) {
-							label.setText(newValue.getAbsolutePath());
-						}
-						else {
-							label.setText("");
-						}
-					});
-
+					fileProperty
+							.addListener(
+									(observableValue, oldValue,
+											newValue) -> Optional.ofNullable(newValue)
+													.ifPresentOrElse(
+															f -> label.setText(Objects
+																	.requireNonNull(
+																			newValue)
+																	.getAbsolutePath()),
+															() -> label.setText("")));
 					var button = tuple.getT3();
+					var fileChooser = tuple.getT4();
 					button.setOnMouseClicked(e -> Optional
-							.ofNullable(this.fileChooser.showOpenDialog(this.stage.get()))
+							.ofNullable(fileChooser.showOpenDialog(this.stage.get()))
 							.ifPresent(fileProperty::set));
 				});
 
@@ -156,11 +187,22 @@ public class FormController implements Initializable {
 		this.podcastModel.titleProperty().addListener(this::onChange);
 		this.podcastModel.interviewFileProperty().addListener(this::onChange);
 		this.podcastModel.introductionFileProperty().addListener(this::onChange);
+		this.podcastModel.photoFileProperty().addListener(this::onChange);
 	}
 
-	private Tuple3<Label, SimpleObjectProperty<File>, Button> fileSelectionTuple(
-			Label label, SimpleObjectProperty<File> prop, Button btn) {
-		return Tuples.of(label, prop, btn);
+	private Tuple4<Label, SimpleObjectProperty<File>, Button, FileChooser> fileSelectionTuple(
+			Label label, SimpleObjectProperty<File> prop, Button btn, FileChooser fc) {
+		return Tuples.of(label, prop, btn, fc);
+	}
+
+	private void repaintProfilePhotoFile(File photoFile) {
+		if (photoFile != null) {
+			var image = FxUtils.buildImageFromResource(new FileSystemResource(photoFile));
+			this.photoImageView.setImage(image);
+		}
+		else {
+			this.photoImageView.setImage(null);
+		}
 	}
 
 	@EventListener
@@ -174,7 +216,11 @@ public class FormController implements Initializable {
 					.setValue(source.interviewFileProperty().getValue());
 			this.podcastModel.introductionFileProperty()
 					.setValue(source.introductionFileProperty().getValue());
+			this.podcastModel.photoFileProperty()
+					.setValue(source.photoFileProperty().getValue());
 
+			var photoFile = source.photoFileProperty().get();
+			this.repaintProfilePhotoFile(photoFile);
 		});
 	}
 
