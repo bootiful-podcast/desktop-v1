@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.net.SocketException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,6 +38,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Log4j2
 public class ApiClient {
+
+	private final PodcastArchiveBuilder podcastArchiveBuilder;
 
 	private final AtomicBoolean connected = new AtomicBoolean(false);
 
@@ -58,10 +61,12 @@ public class ApiClient {
 	 */
 	private final Map<String, AtomicBoolean> pollMap = new ConcurrentHashMap<>();
 
-	public ApiClient(String serverUrl, ObjectMapper om, ScheduledExecutorService executor,
+	public ApiClient(PodcastArchiveBuilder podcastArchiveBuilder, String serverUrl,
+			ObjectMapper om, ScheduledExecutorService executor,
 			ApplicationEventPublisher publisher, RestTemplate restTemplate,
 			int interval) {
 		this.objectMapper = om;
+		this.podcastArchiveBuilder = podcastArchiveBuilder;
 		this.monitorDelayInSeconds = interval;
 		this.executor = executor;
 		this.restTemplate = restTemplate;
@@ -142,10 +147,10 @@ public class ApiClient {
 	 */
 	@Async
 	public void publish(String uid, String title, String description, File introduction,
-			File interview) {
+			File interview, File photo) {
 		this.publisher.publishEvent(new PodcastProductionStartedEvent(uid));
-		var archive = this.createArchive(uid, title, description, introduction,
-				interview);
+		var archive = this.createArchive(uid, title, description, introduction, interview,
+				photo);
 		try {
 			Optional//
 					.ofNullable(this.submitForProduction(uid, archive))//
@@ -163,11 +168,12 @@ public class ApiClient {
 		}
 	}
 
+	@SneakyThrows
 	private File createArchive(String uuid, String title, String description, File intro,
-			File interview) {
-		return new PodcastArchiveBuilder(title, description, uuid)//
-				.addMp3Media(intro, interview)//
-				.build();
+			File interview, File photo) {
+		var zip = Files.createTempFile("podcast-archive-" + uuid, ".zip").toFile();
+		return this.podcastArchiveBuilder.createArchive(zip, uuid, title, description,
+				intro, interview, photo);
 	}
 
 	private URI submitForProduction(String uid, File archive) {

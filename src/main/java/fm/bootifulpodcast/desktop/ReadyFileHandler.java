@@ -1,6 +1,5 @@
 package fm.bootifulpodcast.desktop;
 
-import fm.bootifulpodcast.desktop.client.ApiClient;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.stage.FileChooser;

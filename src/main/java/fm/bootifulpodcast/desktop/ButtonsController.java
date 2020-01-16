@@ -183,17 +183,19 @@ public class ButtonsController implements Initializable {
 
 		this.newPodcastLoaded();
 
-		//
 		this.all.forEach(b -> b.setDisable(true));
 		this.newPodcastButton.setDisable(false);
 		this.connectedIcon.setGraphic(this.disconnectedImageView);
 		this.publishButton.setOnMouseClicked(e -> {
 			var model = this.podcast.get();
 			var uuid = UUID.randomUUID().toString();
-			this.client.publish(uuid, model.titleProperty().get(),
-					model.descriptionProperty().get(),
-					model.introductionFileProperty().get(),
-					model.interviewFileProperty().get());
+			this.client.publish(uuid, //
+					model.titleProperty().get(), //
+					model.descriptionProperty().get(), //
+					model.introductionFileProperty().get(), //
+					model.interviewFileProperty().get(), //
+					model.photoFileProperty().get()//
+			);
 		});
 		this.saveMediaToFileButton.setOnMouseClicked(
 				e -> this.handler.handle(this.stage.get(), this.fileUri.get()));

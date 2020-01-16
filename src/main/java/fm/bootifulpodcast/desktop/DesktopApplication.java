@@ -2,6 +2,7 @@ package fm.bootifulpodcast.desktop;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fm.bootifulpodcast.desktop.client.ApiClient;
+import fm.bootifulpodcast.desktop.client.PodcastArchiveBuilder;
 import javafx.application.Application;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,9 +36,14 @@ public class DesktopApplication {
 	@Bean
 	ApiClient apiClient(@Value("${podcast.api.url}") String serverUrl,
 			@Value("${podcast.monitor.interval}") int interval, ObjectMapper om,
-			ApplicationEventPublisher publisher) {
-		return new ApiClient(serverUrl, om, executor(), publisher, restTemplate(),
+			PodcastArchiveBuilder pab, ApplicationEventPublisher publisher) {
+		return new ApiClient(pab, serverUrl, om, executor(), publisher, restTemplate(),
 				interval);
+	}
+
+	@Bean
+	PodcastArchiveBuilder podcastArchiveBuilder() {
+		return new PodcastArchiveBuilder();
 	}
 
 	@Bean
