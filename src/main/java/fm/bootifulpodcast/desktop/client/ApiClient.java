@@ -82,19 +82,6 @@ public class ApiClient {
 				+ this.actuatorUrl);
 	}
 
-	@Async
-	@SneakyThrows
-	public CompletableFuture<File> download(URI mediaUri, File file) {
-		var urlResource = new UrlResource(mediaUri);
-		try (var inputStream = urlResource.getInputStream();
-				var outputStream = new FileOutputStream(file)) {
-			FileCopyUtils.copy(inputStream, outputStream);
-			log.debug("downloaded " + mediaUri.toString() + " to "
-					+ file.getAbsolutePath() + "!");
-		}
-		return CompletableFuture.completedFuture(file);
-	}
-
 	/*
 	 * An event is published only once, as soon as the API is connected or disconnected.
 	 * We can't afford to poll for the connection until other components managed by other

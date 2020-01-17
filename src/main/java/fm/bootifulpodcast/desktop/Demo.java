@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Component
 @Profile("dev")
@@ -26,9 +28,9 @@ class Demo {
 		var photo = new File(root, "dave-and-i.jpg");
 		Assert.isTrue(intro.exists() && interview.exists(), "the sample files "
 				+ intro.getAbsolutePath() + " and " + interview.getAbsolutePath());
-
-		var text2 = "Josh Long (@starbuxman) talks to Dr. Dave Syer (test).";
-
+		var sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");
+		var text2 = "Josh Long (@starbuxman) talks to another amazing guest @ "
+				+ sdf.format(new Date());
 		var podcast = new PodcastModel();
 		podcast.introductionFileProperty().set(intro);
 		podcast.interviewFileProperty().set(interview);
