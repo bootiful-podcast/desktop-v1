@@ -54,11 +54,9 @@ public class ProgressController implements Initializable, EventHandler<MouseEven
 	public void initialize(URL url, ResourceBundle resourceBundle) {
 
 		this.processingLabel.setText(this.messages.getMessage("processing-status"));
-		this.processingImage.setImage(FxUtils
-				.buildImageFromResource(new ClassPathResource("images/loading.gif")));
+		this.processingImage.setImage(FxUtils.buildImageFromResource(new ClassPathResource("images/loading.gif")));
 
-		this.downloadMediaHyperlink
-				.setText(this.messages.getMessage(getClass(), "click-to-download"));
+		this.downloadMediaHyperlink.setText(this.messages.getMessage(getClass(), "click-to-download"));
 		this.downloadMediaHyperlink.setVisible(false);
 		this.downloadMediaHyperlink.setOnMouseClicked(this);
 		Platform.runLater(() -> this.show(this.loading));

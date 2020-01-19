@@ -28,8 +28,8 @@ class ReadyFileHandler {
 	public void handle(Stage stage, URI resolved) {
 
 		Platform.runLater(() -> {
-			var extFilter = new FileChooser.ExtensionFilter(
-					this.messages.getMessage("file-chooser-title"), "*.mp3", "*.wav");
+			var extFilter = new FileChooser.ExtensionFilter(this.messages.getMessage("file-chooser-title"), "*.mp3",
+					"*.wav");
 			var fileChooser = new FileChooser();
 			fileChooser.getExtensionFilters().add(extFilter);
 			Assert.notNull(stage, "the stage must have been set");

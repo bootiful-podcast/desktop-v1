@@ -35,10 +35,9 @@ public class DesktopApplication {
 
 	@Bean
 	ApiClient apiClient(@Value("${podcast.api.url}") String serverUrl,
-			@Value("${podcast.monitor.interval}") int interval, ObjectMapper om,
-			PodcastArchiveBuilder pab, ApplicationEventPublisher publisher) {
-		return new ApiClient(pab, serverUrl, om, executor(), publisher, restTemplate(),
-				interval);
+			@Value("${podcast.monitor.interval}") int interval, ObjectMapper om, PodcastArchiveBuilder pab,
+			ApplicationEventPublisher publisher) {
+		return new ApiClient(pab, serverUrl, om, executor(), publisher, restTemplate(), interval);
 	}
 
 	@Bean

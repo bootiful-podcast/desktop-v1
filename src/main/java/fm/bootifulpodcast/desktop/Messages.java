@@ -24,8 +24,7 @@ class Messages {
 
 	public String getMessage(Class<?> clzz, String key, Object... params) {
 		try {
-			return this.messageSource.getMessage(clzz.getSimpleName() + '.' + key, params,
-					this.locale);
+			return this.messageSource.getMessage(clzz.getSimpleName() + '.' + key, params, this.locale);
 		}
 		catch (Exception e) {
 			return this.messageSource.getMessage(key, params, this.locale);

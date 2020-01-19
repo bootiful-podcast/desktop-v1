@@ -9,28 +9,24 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.util.Assert;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.net.SocketException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -61,9 +57,8 @@ public class ApiClient {
 	 */
 	private final Map<String, AtomicBoolean> pollMap = new ConcurrentHashMap<>();
 
-	public ApiClient(PodcastArchiveBuilder podcastArchiveBuilder, String serverUrl,
-			ObjectMapper om, ScheduledExecutorService executor,
-			ApplicationEventPublisher publisher, RestTemplate restTemplate,
+	public ApiClient(PodcastArchiveBuilder podcastArchiveBuilder, String serverUrl, ObjectMapper om,
+			ScheduledExecutorService executor, ApplicationEventPublisher publisher, RestTemplate restTemplate,
 			int interval) {
 		this.objectMapper = om;
 		this.podcastArchiveBuilder = podcastArchiveBuilder;
@@ -73,13 +68,10 @@ public class ApiClient {
 		this.publisher = publisher;
 
 		Assert.hasText(serverUrl, "The server URL provided is null");
-		this.serverUrl = serverUrl.endsWith("/")
-				? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+		this.serverUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
 		this.actuatorUrl = this.serverUrl + "/actuator/health";
-		log.debug(
-				"going to monitor the Actuator health endpoint every " + interval + "s.");
-		log.debug("The server URL is " + this.serverUrl + " and the actuator URL is "
-				+ this.actuatorUrl);
+		log.debug("going to monitor the Actuator health endpoint every " + interval + "s.");
+		log.debug("The server URL is " + this.serverUrl + " and the actuator URL is " + this.actuatorUrl);
 	}
 
 	/*
@@ -89,8 +81,8 @@ public class ApiClient {
 	 */
 	@EventListener(StageReadyEvent.class)
 	public void stageIsReady() {
-		this.executor.scheduleWithFixedDelay(this::monitorConnectedEndpoint, 0,
-				this.monitorDelayInSeconds, TimeUnit.SECONDS);
+		this.executor.scheduleWithFixedDelay(this::monitorConnectedEndpoint, 0, this.monitorDelayInSeconds,
+				TimeUnit.SECONDS);
 	}
 
 	@EventListener
@@ -102,14 +94,12 @@ public class ApiClient {
 		try {
 			var response = this.restTemplate.getForEntity(this.actuatorUrl, String.class);
 			var responseBody = response.getBody();
-			log.debug("Response from Actuator status endpoint (" + this.actuatorUrl
-					+ "): " + responseBody);
-			Map<String, Object> jsonMap = Objects.requireNonNull(objectMapper
-					.readValue(responseBody, new TypeReference<Map<String, Object>>() {
+			log.debug("Response from Actuator status endpoint (" + this.actuatorUrl + "): " + responseBody);
+			Map<String, Object> jsonMap = Objects
+					.requireNonNull(objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {
 					}));
 			var status = (String) jsonMap.get("status");
-			var isActuatorHealthy = response.getStatusCode().is2xxSuccessful()
-					&& status.equalsIgnoreCase("UP");
+			var isActuatorHealthy = response.getStatusCode().is2xxSuccessful() && status.equalsIgnoreCase("UP");
 			if (isActuatorHealthy && this.connected.compareAndSet(false, true)) {
 				publisher.publishEvent(new ApiConnectedEvent());
 			}
@@ -133,34 +123,26 @@ public class ApiClient {
 	 * podcast.
 	 */
 	@Async
-	public void publish(String uid, String title, String description, File introduction,
-			File interview, File photo) {
+	public void publish(String uid, String title, String description, File introduction, File interview, File photo) {
 		this.publisher.publishEvent(new PodcastProductionStartedEvent(uid));
-		var archive = this.createArchive(uid, title, description, introduction, interview,
-				photo);
+		var archive = this.createArchive(uid, title, description, introduction, interview, photo);
 		try {
 			Optional//
 					.ofNullable(this.submitForProduction(uid, archive))//
-					.ifPresentOrElse(
-							uri -> this.publisher.publishEvent(
-									new PodcastProductionCompletedEvent(uid, uri)),
-							() -> this.publisher.publishEvent(
-									new PodcastLoadEvent(new PodcastModel())));
+					.ifPresentOrElse(uri -> this.publisher.publishEvent(new PodcastProductionCompletedEvent(uid, uri)),
+							() -> this.publisher.publishEvent(new PodcastLoadEvent(new PodcastModel())));
 			;
 		}
 		finally {
 			Assert.isTrue(!archive.exists() || archive.delete(),
-					"The file " + archive.getAbsolutePath()
-							+ " could not be deleted, but should be.");
+					"The file " + archive.getAbsolutePath() + " could not be deleted, but should be.");
 		}
 	}
 
 	@SneakyThrows
-	private File createArchive(String uuid, String title, String description, File intro,
-			File interview, File photo) {
+	private File createArchive(String uuid, String title, String description, File intro, File interview, File photo) {
 		var zip = Files.createTempFile("podcast-archive-" + uuid, ".zip").toFile();
-		return this.podcastArchiveBuilder.createArchive(zip, uuid, title, description,
-				intro, interview, photo);
+		return this.podcastArchiveBuilder.createArchive(zip, uuid, title, description, intro, interview, photo);
 	}
 
 	private URI submitForProduction(String uid, File archive) {
@@ -185,8 +167,7 @@ public class ApiClient {
 		};
 		while (this.pollMap.getOrDefault(uid, new AtomicBoolean(false)).get()) {
 			log.debug("the pollMap had '" + uid + "' " + "as true");
-			var result = this.restTemplate.exchange(statusUrl, HttpMethod.GET, null,
-					parameterizedTypeReference);
+			var result = this.restTemplate.exchange(statusUrl, HttpMethod.GET, null, parameterizedTypeReference);
 			Assert.isTrue(result.getStatusCode().is2xxSuccessful(),
 					"The HTTP request must return a valid 20x series HTTP status");
 			var status = Objects.requireNonNull(result.getBody());
@@ -197,9 +178,7 @@ public class ApiClient {
 			else {
 				var seconds = 10;
 				TimeUnit.SECONDS.sleep(seconds);
-				log.debug("Sleeping " + seconds
-						+ "s while checking the production status at '" + statusUrl
-						+ "'.");
+				log.debug("Sleeping " + seconds + "s while checking the production status at '" + statusUrl + "'.");
 			}
 		}
 		log.debug("the pollMap had '" + uid + "' " + "as false. Returning.");

@@ -11,7 +11,6 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -22,15 +21,13 @@ public class ProductionStatus {
 
 	private RestTemplate template;
 
-	public ProductionStatus(URI serverRootUrl, Executor ex, RestTemplate rt,
-			String errMsg, boolean published, String uid, HttpStatus status,
-			URI statusUrl) {
+	public ProductionStatus(URI serverRootUrl, Executor ex, RestTemplate rt, String errMsg, boolean published,
+			String uid, HttpStatus status, URI statusUrl) {
 
 		this.executor = ex;
 		this.template = rt;
 		Assert.notNull(this.executor, "the executor must be non-null");
-		Assert.notNull(this.template,
-				"the " + RestTemplate.class.getName() + " must be non-null");
+		Assert.notNull(this.template, "the " + RestTemplate.class.getName() + " must be non-null");
 		Assert.notNull(uid, "the UID must be non-null");
 		this.statusUrl = statusUrl;
 
@@ -62,8 +59,7 @@ public class ProductionStatus {
 		var parameterizedTypeReference = new ParameterizedTypeReference<Map<String, String>>() {
 		};
 		while (true) {
-			var result = this.template.exchange(this.statusUrl, HttpMethod.GET, null,
-					parameterizedTypeReference);
+			var result = this.template.exchange(this.statusUrl, HttpMethod.GET, null, parameterizedTypeReference);
 			Assert.isTrue(result.getStatusCode().is2xxSuccessful(),
 					"the HTTP request must return a valid 20x series HTTP status");
 			var status = Objects.requireNonNull(result.getBody());
@@ -74,9 +70,8 @@ public class ProductionStatus {
 			else {
 				var seconds = 10;
 				TimeUnit.SECONDS.sleep(seconds);
-				log.debug("sleeping " + seconds
-						+ "s while checking the production status at '" + this.statusUrl
-						+ "'.");
+				log.debug(
+						"sleeping " + seconds + "s while checking the production status at '" + this.statusUrl + "'.");
 			}
 		}
 	}

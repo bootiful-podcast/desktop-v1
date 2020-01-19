@@ -6,8 +6,8 @@ import lombok.Getter;
 import java.net.URI;
 
 @Getter
-public class PodcastProductionCompletedEvent extends
-		GenericApplicationEvent<PodcastProductionCompletedEvent.PodcastProductionOutput> {
+public class PodcastProductionCompletedEvent
+		extends GenericApplicationEvent<PodcastProductionCompletedEvent.PodcastProductionOutput> {
 
 	public PodcastProductionCompletedEvent(String uid, URI mediaUrl) {
 		super(PodcastProductionOutput.builder().uid(uid).media(mediaUrl).build());

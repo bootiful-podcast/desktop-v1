@@ -2,7 +2,6 @@ package fm.bootifulpodcast.desktop;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -22,7 +21,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.util.function.Tuple4;
-import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
 import java.io.File;
@@ -83,15 +81,15 @@ public class FormController implements Initializable {
 	FormController(Messages messages, ApplicationEventPublisher publisher) {
 		this.messages = messages;
 		this.publisher = publisher;
-		this.imageFileChooser = this.initializeFileChooseFor("*.png", "*.jpg");
+		this.imageFileChooser = this.initializeFileChooseFor("*.jpg");
 		this.mp3FileChooser = this.initializeFileChooseFor("*.mp3");
 	}
 
 	private FileChooser initializeFileChooseFor(String... exts) {
 		var fileChooser = new FileChooser();
 		fileChooser.setTitle(messages.getMessage(getClass(), "file-chooser-title"));
-		fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
-				messages.getMessage(getClass(), "file-chooser-description"), exts));
+		fileChooser.getExtensionFilters().add(
+				new FileChooser.ExtensionFilter(messages.getMessage(getClass(), "file-chooser-description"), exts));
 		return fileChooser;
 	}
 
@@ -108,13 +106,12 @@ public class FormController implements Initializable {
 		var profilePhoto = model.photoFileProperty().get();
 		var title = model.titleProperty().get();
 		var wasValidBefore = this.valid.get();
-		var isValidNow = (StringUtils.hasText(title) && StringUtils.hasText(description)
-				&& intro != null && interview != null && profilePhoto != null);
+		var isValidNow = (StringUtils.hasText(title) && StringUtils.hasText(description) && intro != null
+				&& interview != null && profilePhoto != null);
 		this.valid.set(isValidNow);
 		this.repaintProfilePhotoFile(model.photoFileProperty().get());
 		if (wasValidBefore != isValidNow) { // if they are different
-			var event = isValidNow ? new PodcastValidationSuccessEvent(model)
-					: new PodcastValidationFailedEvent(model);
+			var event = isValidNow ? new PodcastValidationSuccessEvent(model) : new PodcastValidationFailedEvent(model);
 			this.publisher.publishEvent(event);
 		}
 	}
@@ -126,39 +123,28 @@ public class FormController implements Initializable {
 		this.photoImageView.setPreserveRatio(true);
 		this.photoImageView.setFitHeight(dimension);
 
-		this.titlePromptLabel
-				.setText(this.messages.getMessage(getClass(), "title-prompt"));
-		this.descriptionPromptLabel
-				.setText(this.messages.getMessage(getClass(), "description-prompt"));
+		this.titlePromptLabel.setText(this.messages.getMessage(getClass(), "title-prompt"));
+		this.descriptionPromptLabel.setText(this.messages.getMessage(getClass(), "description-prompt"));
 		this.filePromptLabel.setText(this.messages.getMessage(getClass(), "file-prompt"));
 
 		List.of(this.interviewFileLabel, this.photoFileLabel, this.introFileLabel)
-				.forEach(label -> label.setText(
-						this.messages.getMessage(getClass(), "no-file-selected")));
+				.forEach(label -> label.setText(this.messages.getMessage(getClass(), "no-file-selected")));
 
-		List.of(this.interviewFileChooserButton, this.photoFileChooserButton,
-				this.introFileChooserButton)
-				.forEach(btn -> btn
-						.setText(this.messages.getMessage(getClass(), "choose-file")));
+		List.of(this.interviewFileChooserButton, this.photoFileChooserButton, this.introFileChooserButton)
+				.forEach(btn -> btn.setText(this.messages.getMessage(getClass(), "choose-file")));
 
-		this.introLabel
-				.setText(this.messages.getMessage(getClass(), "introduction-file"));
-		this.interviewLabel
-				.setText(this.messages.getMessage(getClass(), "interview-file"));
+		this.introLabel.setText(this.messages.getMessage(getClass(), "introduction-file"));
+		this.interviewLabel.setText(this.messages.getMessage(getClass(), "interview-file"));
 		this.photoLabel.setText(this.messages.getMessage(getClass(), "photo-file"));
 
 		this.title.textProperty().bindBidirectional(this.podcastModel.titleProperty());
-		this.description.textProperty()
-				.bindBidirectional(this.podcastModel.descriptionProperty());
+		this.description.textProperty().bindBidirectional(this.podcastModel.descriptionProperty());
 
-		List.of(fileSelectionTuple(this.interviewFileLabel,
-				this.podcastModel.interviewFileProperty(),
+		List.of(fileSelectionTuple(this.interviewFileLabel, this.podcastModel.interviewFileProperty(),
 				this.interviewFileChooserButton, this.mp3FileChooser),
-				fileSelectionTuple(this.introFileLabel,
-						this.podcastModel.introductionFileProperty(),
+				fileSelectionTuple(this.introFileLabel, this.podcastModel.introductionFileProperty(),
 						this.introFileChooserButton, this.mp3FileChooser),
-				fileSelectionTuple(this.photoFileLabel,
-						this.podcastModel.photoFileProperty(),
+				fileSelectionTuple(this.photoFileLabel, this.podcastModel.photoFileProperty(),
 						this.photoFileChooserButton, this.imageFileChooser))
 				.forEach(tuple -> {
 					var label = tuple.getT1();
@@ -166,20 +152,12 @@ public class FormController implements Initializable {
 					label.setAlignment(Pos.CENTER_RIGHT);
 					HBox.setHgrow(label, Priority.ALWAYS);
 					var fileProperty = tuple.getT2();
-					fileProperty
-							.addListener(
-									(observableValue, oldValue,
-											newValue) -> Optional.ofNullable(newValue)
-													.ifPresentOrElse(
-															f -> label.setText(Objects
-																	.requireNonNull(
-																			newValue)
-																	.getAbsolutePath()),
-															() -> label.setText("")));
+					fileProperty.addListener((observableValue, oldValue, newValue) -> Optional.ofNullable(newValue)
+							.ifPresentOrElse(f -> label.setText(Objects.requireNonNull(newValue).getAbsolutePath()),
+									() -> label.setText("")));
 					var button = tuple.getT3();
 					var fileChooser = tuple.getT4();
-					button.setOnMouseClicked(e -> Optional
-							.ofNullable(fileChooser.showOpenDialog(this.stage.get()))
+					button.setOnMouseClicked(e -> Optional.ofNullable(fileChooser.showOpenDialog(this.stage.get()))
 							.ifPresent(fileProperty::set));
 				});
 
@@ -190,8 +168,8 @@ public class FormController implements Initializable {
 		this.podcastModel.photoFileProperty().addListener(this::onChange);
 	}
 
-	private Tuple4<Label, SimpleObjectProperty<File>, Button, FileChooser> fileSelectionTuple(
-			Label label, SimpleObjectProperty<File> prop, Button btn, FileChooser fc) {
+	private Tuple4<Label, SimpleObjectProperty<File>, Button, FileChooser> fileSelectionTuple(Label label,
+			SimpleObjectProperty<File> prop, Button btn, FileChooser fc) {
 		return Tuples.of(label, prop, btn, fc);
 	}
 
@@ -209,15 +187,11 @@ public class FormController implements Initializable {
 	public void loadEvent(PodcastLoadEvent ple) {
 		Platform.runLater(() -> {
 			var source = ple.getSource();
-			this.podcastModel.descriptionProperty()
-					.setValue(source.descriptionProperty().getValue());
+			this.podcastModel.descriptionProperty().setValue(source.descriptionProperty().getValue());
 			this.podcastModel.titleProperty().setValue(source.titleProperty().getValue());
-			this.podcastModel.interviewFileProperty()
-					.setValue(source.interviewFileProperty().getValue());
-			this.podcastModel.introductionFileProperty()
-					.setValue(source.introductionFileProperty().getValue());
-			this.podcastModel.photoFileProperty()
-					.setValue(source.photoFileProperty().getValue());
+			this.podcastModel.interviewFileProperty().setValue(source.interviewFileProperty().getValue());
+			this.podcastModel.introductionFileProperty().setValue(source.introductionFileProperty().getValue());
+			this.podcastModel.photoFileProperty().setValue(source.photoFileProperty().getValue());
 
 			var photoFile = source.photoFileProperty().get();
 			this.repaintProfilePhotoFile(photoFile);

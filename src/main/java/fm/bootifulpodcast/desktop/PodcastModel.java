@@ -26,15 +26,12 @@ public class PodcastModel {
 	@Override
 	public String toString() {
 
-		Function<File, String> fileToString = file -> file == null ? ""
-				: file.getAbsolutePath();
+		Function<File, String> fileToString = file -> file == null ? "" : file.getAbsolutePath();
 
-		return "PodcastModel{" + "photoFile="
-				+ fileToString.apply(photoFileProperty.get()) + ", introductionFile="
+		return "PodcastModel{" + "photoFile=" + fileToString.apply(photoFileProperty.get()) + ", introductionFile="
 				+ fileToString.apply(introductionFileProperty.get()) + ", interviewFile="
-				+ fileToString.apply(interviewFileProperty.get()) + ", title="
-				+ titleProperty.get() + ", description=" + descriptionProperty.get()
-				+ '}';
+				+ fileToString.apply(interviewFileProperty.get()) + ", title=" + titleProperty.get() + ", description="
+				+ descriptionProperty.get() + '}';
 	}
 
 }

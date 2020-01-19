@@ -37,12 +37,11 @@ public class PodcastArchiveBuilder {
 	 * @return the file to which the resulting archive was written.
 	 */
 	@SneakyThrows
-	public File createArchive(File zipFile, String uid, String title, String description,
-			File intro, File interview, File photo) {
+	public File createArchive(File zipFile, String uid, String title, String description, File intro, File interview,
+			File photo) {
 
 		var staging = new File(zipFile.getParent(), "staging-" + UUID.randomUUID());
-		Assert.isTrue(staging.exists() || staging.mkdirs(),
-				"the staging directory could not be created");
+		Assert.isTrue(staging.exists() || staging.mkdirs(), "the staging directory could not be created");
 
 		var srcFiles = new ArrayList<File>();
 		srcFiles.add(interview);
@@ -51,8 +50,7 @@ public class PodcastArchiveBuilder {
 
 		var xmlFile = new File(staging, "manifest.xml");
 		try (var xmlOutputStream = new BufferedWriter(new FileWriter(xmlFile))) {
-			var xml = buildXmlManifestForPackage(title, description, uid, intro,
-					interview, photo);
+			var xml = buildXmlManifestForPackage(title, description, uid, intro, interview, photo);
 			FileCopyUtils.copy(xml, xmlOutputStream);
 			srcFiles.add(xmlFile);
 		}
@@ -60,23 +58,22 @@ public class PodcastArchiveBuilder {
 		try (var outputStream = new BufferedOutputStream(new FileOutputStream(zipFile));
 				var zipOutputStream = new ZipOutputStream(outputStream)) {
 			for (var fileToZip : srcFiles) {
-				try (var inputStream = new BufferedInputStream(
-						new FileInputStream(fileToZip))) {
+				try (var inputStream = new BufferedInputStream(new FileInputStream(fileToZip))) {
 					var zipEntry = new ZipEntry(fileToZip.getName());
 					zipOutputStream.putNextEntry(zipEntry);
 					StreamUtils.copy(inputStream, zipOutputStream);
 				}
 			}
 		}
-		Assert.isTrue(FileSystemUtils.deleteRecursively(staging), "the staging directory "
-				+ staging.getAbsolutePath() + " couldn't be deleted");
+		Assert.isTrue(FileSystemUtils.deleteRecursively(staging),
+				"the staging directory " + staging.getAbsolutePath() + " couldn't be deleted");
 
 		return zipFile;
 	}
 
 	@SneakyThrows
-	private static String buildXmlManifestForPackage(String title, String description,
-			String uid, File intro, File interview, File photo) {
+	private static String buildXmlManifestForPackage(String title, String description, String uid, File intro,
+			File interview, File photo) {
 
 		var docFactory = DocumentBuilderFactory.newInstance();
 		var docBuilder = docFactory.newDocumentBuilder();
@@ -99,18 +96,15 @@ public class PodcastArchiveBuilder {
 		 * </podcast>
 		 */
 
-		var interviewElement = createElementWithAttributes(doc, "interview",
-				Map.of("src", interview.getName()));
-		var introductionElement = createElementWithAttributes(doc, "introduction",
-				Map.of("src", intro.getName()));
-		var photoElement = createElementWithAttributes(doc, "photo",
-				Map.of("src", photo.getName()));
+		var interviewElement = createElementWithAttributes(doc, "interview", Map.of("src", interview.getName()));
+		var introductionElement = createElementWithAttributes(doc, "introduction", Map.of("src", intro.getName()));
+		var photoElement = createElementWithAttributes(doc, "photo", Map.of("src", photo.getName()));
 
 		var descriptionElement = doc.createElement("description");
 		descriptionElement.appendChild(doc.createCDATASection(description));
 
-		Arrays.asList(interviewElement, introductionElement, photoElement,
-				descriptionElement).forEach(rootElement::appendChild);
+		Arrays.asList(interviewElement, introductionElement, photoElement, descriptionElement)
+				.forEach(rootElement::appendChild);
 
 		var transformerFactory = TransformerFactory.newInstance();
 
@@ -125,8 +119,7 @@ public class PodcastArchiveBuilder {
 		return stringWriter.toString();
 	}
 
-	private static Element createElementWithAttributes(Document doc, String elementName,
-			Map<String, String> attrs) {
+	private static Element createElementWithAttributes(Document doc, String elementName, Map<String, String> attrs) {
 		var element = doc.createElement(elementName);
 		attrs.forEach(element::setAttribute);
 		return element;

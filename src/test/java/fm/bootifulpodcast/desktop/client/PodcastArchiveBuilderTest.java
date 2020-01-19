@@ -22,11 +22,9 @@ import java.util.List;
 
 public class PodcastArchiveBuilderTest {
 
-	private final File staging = new File(
-			new File(new File(System.getProperty("user.home")), "Desktop"), "staging");
+	private final File staging = new File(new File(new File(System.getProperty("user.home")), "Desktop"), "staging");
 
-	private final File setUp = new File(
-			new File(new File(System.getProperty("user.home")), "Desktop"), "setup");
+	private final File setUp = new File(new File(new File(System.getProperty("user.home")), "Desktop"), "setup");
 
 	private final Resource img = new ClassPathResource("/sample-manifest.xml");
 
@@ -43,19 +41,16 @@ public class PodcastArchiveBuilderTest {
 	@Before
 	@SneakyThrows
 	public void before() {
-		Arrays.asList(this.staging, this.setUp).forEach(f -> Assert.isTrue(
-				f.exists() || f.mkdirs(),
+		Arrays.asList(this.staging, this.setUp).forEach(f -> Assert.isTrue(f.exists() || f.mkdirs(),
 				"the directory " + f.getAbsolutePath() + " could not be created"));
-		Arrays.asList(new SetupAndTarget(img, photoFile),
-				new SetupAndTarget(intro, introFile),
+		Arrays.asList(new SetupAndTarget(img, photoFile), new SetupAndTarget(intro, introFile),
 				new SetupAndTarget(interview, interviewFile))
 				.forEach(sut -> copy(sut.getSource(), sut.getDestination()));
 	}
 
 	@SneakyThrows
 	private void copy(Resource r, File os) {
-		try (var in = r.getInputStream();
-				var out = new BufferedOutputStream(new FileOutputStream(os))) {
+		try (var in = r.getInputStream(); var out = new BufferedOutputStream(new FileOutputStream(os))) {
 			FileCopyUtils.copy(in, out);
 		}
 	}
@@ -74,21 +69,19 @@ public class PodcastArchiveBuilderTest {
 	public void createArchive() {
 		var zip = new File(this.staging, "archive.zip");
 		var podcastArchiveBuilder = new PodcastArchiveBuilder();
-		File archive = podcastArchiveBuilder.createArchive(zip, "123", "Title 123",
-				"Description 123", interviewFile, introFile, photoFile);
+		File archive = podcastArchiveBuilder.createArchive(zip, "123", "Title 123", "Description 123", interviewFile,
+				introFile, photoFile);
 		Assert.isTrue(archive.exists(), "the archive does not exist");
 	}
 
 	@After
 	public void after() {
-		Arrays.asList(this.introFile, this.interviewFile, this.photoFile)
-				.forEach(this::delete);
+		Arrays.asList(this.introFile, this.interviewFile, this.photoFile).forEach(this::delete);
 	}
 
 	@SneakyThrows
 	private void delete(File file) {
-		Assert.isTrue(!file.exists() || file.delete(),
-				"the file " + file.getAbsolutePath() + " could not be deleted");
+		Assert.isTrue(!file.exists() || file.delete(), "the file " + file.getAbsolutePath() + " could not be deleted");
 	}
 
 }

@@ -35,8 +35,7 @@ public class ButtonsController implements Initializable {
 
 	public VBox root;
 
-	public Button newPodcastButton, publishButton, saveMediaToFileButton,
-			stopMonitoringButton;
+	public Button newPodcastButton, publishButton, saveMediaToFileButton, stopMonitoringButton;
 
 	public Label connectedIcon;
 
@@ -68,18 +67,16 @@ public class ButtonsController implements Initializable {
 
 	private final AtomicReference<String> currentUri = new AtomicReference<>();
 
-	ButtonsController(ApiClient client, Messages msgs,
-			ApplicationEventPublisher publisher, ReadyFileHandler handler) {
+	ButtonsController(ApiClient client, Messages msgs, ApplicationEventPublisher publisher, ReadyFileHandler handler) {
 		this.client = client;
 		this.messages = msgs;
 		this.publisher = publisher;
 		this.handler = handler;
-		this.disconnectedImageView = FxUtils.buildImageViewFromResource(
-				new ClassPathResource("images/disconnected-icon.png"));
-		this.connectedImageView = FxUtils.buildImageViewFromResource(
-				new ClassPathResource("images/connected-icon.png"));
-		List.of(this.disconnectedImageView, this.connectedImageView)
-				.forEach(img -> img.setFitHeight(30));
+		this.disconnectedImageView = FxUtils
+				.buildImageViewFromResource(new ClassPathResource("images/disconnected-icon.png"));
+		this.connectedImageView = FxUtils
+				.buildImageViewFromResource(new ClassPathResource("images/connected-icon.png"));
+		List.of(this.disconnectedImageView, this.connectedImageView).forEach(img -> img.setFitHeight(30));
 	}
 
 	@EventListener
@@ -168,16 +165,14 @@ public class ButtonsController implements Initializable {
 	public void initialize(URL url, ResourceBundle resourceBundle) {
 
 		var clzz = ButtonsController.class;
-		this.stopMonitoringButton
-				.setText(this.messages.getMessage(clzz, "stop-monitoring"));
+		this.stopMonitoringButton.setText(this.messages.getMessage(clzz, "stop-monitoring"));
 		this.newPodcastButton.setText(this.messages.getMessage(clzz, "new-podcast"));
 		this.saveMediaToFileButton.setText(this.messages.getMessage(clzz, "save-media"));
 		this.publishButton.setText(this.messages.getMessage(clzz, "publish"));
 
-		this.all.addAll(List.of(this.newPodcastButton, this.stopMonitoringButton,
-				this.saveMediaToFileButton, this.publishButton));
-		this.visibleAfterProcessing
-				.addAll(List.of(this.newPodcastButton, this.saveMediaToFileButton));
+		this.all.addAll(List.of(this.newPodcastButton, this.stopMonitoringButton, this.saveMediaToFileButton,
+				this.publishButton));
+		this.visibleAfterProcessing.addAll(List.of(this.newPodcastButton, this.saveMediaToFileButton));
 		this.visibleDuringProcessing.addAll(List.of(this.stopMonitoringButton));
 		this.visibleDuringForm.addAll(List.of(this.newPodcastButton, this.publishButton));
 
@@ -197,14 +192,13 @@ public class ButtonsController implements Initializable {
 					model.photoFileProperty().get()//
 			);
 		});
-		this.saveMediaToFileButton.setOnMouseClicked(
-				e -> this.handler.handle(this.stage.get(), this.fileUri.get()));
+		this.saveMediaToFileButton.setOnMouseClicked(e -> this.handler.handle(this.stage.get(), this.fileUri.get()));
 
-		this.newPodcastButton.setOnMouseClicked(e -> this.publisher
-				.publishEvent(new PodcastLoadEvent(new PodcastModel())));
+		this.newPodcastButton
+				.setOnMouseClicked(e -> this.publisher.publishEvent(new PodcastLoadEvent(new PodcastModel())));
 
-		this.stopMonitoringButton.setOnMouseClicked(e -> this.publisher.publishEvent(
-				new PodcastProductionMonitoringStopEvent(this.currentUri.get())));
+		this.stopMonitoringButton.setOnMouseClicked(
+				e -> this.publisher.publishEvent(new PodcastProductionMonitoringStopEvent(this.currentUri.get())));
 	}
 
 }
