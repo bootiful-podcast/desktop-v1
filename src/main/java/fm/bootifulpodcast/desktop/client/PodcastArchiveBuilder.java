@@ -76,7 +76,6 @@ public class PodcastArchiveBuilder {
 			File interview, File photo) {
 		var docFactory = DocumentBuilderFactory.newInstance();
 		var docBuilder = docFactory.newDocumentBuilder();
-
 		var doc = docBuilder.newDocument();
 		var rootElement = doc.createElement("podcast");
 		rootElement.setAttribute("uid", uid);
