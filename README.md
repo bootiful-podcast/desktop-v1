@@ -1,6 +1,7 @@
 # Desktop Client
 
-![Desktop Client](https://github.com/bootiful-podcast/desktop/workflows/Desktop%20Application/badge.svg)
+![Desktop Client](https://github.com/bootiful-podcast/desktop/workflows/Desktop%20Client/badge.svg)
+
 
 An experimental take on a desktop UI to the podcast publication usecase. 
 
