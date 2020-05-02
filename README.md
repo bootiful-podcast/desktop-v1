@@ -1,5 +1,7 @@
 # BootifulPodcast.fm Desktop Client
 
+![Desktop Client](https://github.com/bootiful-podcast/desktop/workflows/Desktop%20Application/badge.svg)
+
 An experimental take on a desktop UI to the podcast publication usecase. 
 
 In order to run this you'll need to run [the API server](https://github.com/bootiful-podcast/api). 
