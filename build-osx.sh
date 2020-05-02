@@ -22,5 +22,6 @@ touch $app
 
 archive_name=${app}.tgz
 
-tar -c  $app  | gzip -9 > $archive_name 
+tar -c  $app  | gzip -9 > $archive_name
+echo "the application has been saved into ${archive_name}."
 
