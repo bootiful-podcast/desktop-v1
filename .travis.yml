@@ -17,5 +17,6 @@ install:
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -U
 
 script:
+  - env
   -  mvn -X -e verify deploy
   - ./build-osx.sh
