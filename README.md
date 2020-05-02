@@ -1,4 +1,4 @@
-# BootifulPodcast.fm Desktop Client
+# Desktop Client
 
 ![Desktop Client](https://github.com/bootiful-podcast/desktop/workflows/Desktop%20Application/badge.svg)
 
