@@ -18,5 +18,5 @@ install:
 
 script:
   - env
-  -  mvn -X -e verify deploy
+  -  mvn -X -e verify deploy && ./build-osx.sh
   - ./build-osx.sh

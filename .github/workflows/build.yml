@@ -5,8 +5,7 @@ env:
   ARTIFACTORY_API_TOKEN_SECRET: ${{ secrets.ARTIFACTORY_API_TOKEN_SECRET }}
   ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME  }}
   ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD  }}
-  PODBEAN_CLIENT_SECRET: ${{ secrets.PODBEAN_CLIENT_SECRET }}
-  PODBEAN_CLIENT_ID: ${{ secrets.PODBEAN_CLIENT_ID }}
+  SPRING_PROFILES_ACTIVE: ci
 
 on:
   push:
@@ -34,4 +33,4 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build the application
-        run: mvn -Dspring.profiles.active=ci verify deploy
+        run: mvn verify deploy && ./build-osx.sh
