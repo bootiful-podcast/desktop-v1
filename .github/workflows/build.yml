@@ -1,5 +1,5 @@
 
-name: Desktop Application
+name: Desktop Client
 
 env:
   ARTIFACTORY_API_TOKEN_SECRET: ${{ secrets.ARTIFACTORY_API_TOKEN_SECRET }}
