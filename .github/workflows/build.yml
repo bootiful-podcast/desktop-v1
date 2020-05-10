@@ -53,4 +53,4 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: BootifulPodcast.app.tgz
-          path: target/BootifulPodcast.app.tgz
+          path: target/macos/BootifulPodcast.app.tgz
