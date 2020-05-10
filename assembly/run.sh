@@ -10,8 +10,9 @@ do_run(){
     echo "starting.."
     echo $0
     export SPRING_PROFILES_ACTIVE="$(cat bp_mode)"
+    echo "the BP_MODE for this build is $SPRING_PROFILES_ACTIVE "
     ${DIRECTORY_OF_APP}/desktop.jar
-#    disown
+    disown
 
 }
 
