@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-## Buiilds the OSX .app 
+## Builds the OSX .app
 
-rm -rf target
-mvn -DskipTests=true spring-javaformat:apply package
+#rm -rf target
+#mvn -DskipTests=true spring-javaformat:apply package
 HERE=$(cd `dirname $0` && pwd )
 T=target
 app_name=BootifulPodcast
@@ -13,6 +13,8 @@ mac_os=${contents}/MacOS
 resources=${contents}/Resources
 mkdir -p $mac_os
 mkdir -p $resources
+
+echo ${BP_MODE:-development} > ${mac_os}/bp_mode
 cp -r ${HERE}/assembly/run.sh ${mac_os}/run.sh
 cp -r ${HERE}/target/desktop.jar ${mac_os}/desktop.jar
 cp -r ${HERE}/assembly/app.icns ${resources}/app.icns

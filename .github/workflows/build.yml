@@ -43,7 +43,7 @@ jobs:
           fi
           echo "BP_MODE=${BP_MODE}"
           cd $GITHUB_WORKSPACE
-          mvn verify deploy
+          mvn clean verify
           ./build-osx.sh
 
 
