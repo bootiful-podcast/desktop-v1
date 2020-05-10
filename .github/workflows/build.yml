@@ -39,7 +39,7 @@ jobs:
 
           export BP_MODE="development"
           if [ "$GITHUB_EVENT_NAME" = "create" ]; then
-              if [[  "${GITHUB_REF}" =~ "tags" ]]; then
+              if [[ "${GITHUB_REF}" =~ "tags" ]]; then
                   BP_MODE="production"
               fi
           fi
@@ -52,5 +52,5 @@ jobs:
       - name: Archive production artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: BootifulPodcast.app.tgz
-          path: target/macos/BootifulPodcast.app.tgz
+          name: BootifulPodcast-${{BP_MODE}}.app.tgz
+          path: target/macos/BootifulPodcast-${{BP_MODE}}.app.tgz
