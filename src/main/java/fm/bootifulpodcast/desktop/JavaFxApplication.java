@@ -21,7 +21,10 @@ public class JavaFxApplication extends Application {
 
 	@Override
 	public void init() {
+
+
 		ApplicationContextInitializer<GenericApplicationContext> initializer = context -> {
+			context.getEnvironment().setActiveProfiles();
 			context.registerBean(Application.class, () -> JavaFxApplication.this);
 			context.registerBean(Parameters.class, this::getParameters);
 			context.registerBean(HostServices.class, this::getHostServices);
