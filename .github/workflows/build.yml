@@ -52,5 +52,5 @@ jobs:
       - name: Archive production artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: BootifulPodcast-${{BP_MODE}}.app.tgz
-          path: target/macos/BootifulPodcast-${{BP_MODE}}.app.tgz
+          name: BootifulPodcast.app.tgz
+          path: target/macos/BootifulPodcast.app.tgz

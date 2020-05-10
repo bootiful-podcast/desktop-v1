@@ -21,7 +21,7 @@ cp -r ${HERE}/assembly/Info.plist ${contents}/Info.plist
 chmod +x $app
 touch $app
 
-archive_name=${app}-${BP_MODE}.tgz
+archive_name=${app}.tgz
 
 tar -c  $app  | gzip -9 > $archive_name
 echo "the application has been saved into ${archive_name}."
