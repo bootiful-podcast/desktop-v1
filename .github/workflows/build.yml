@@ -33,7 +33,19 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build the application
-        run: mvn verify deploy && ./build-osx.sh
+        run: |
+
+          export BP_MODE="development"
+          if [ "$GITHUB_EVENT_NAME" = "create" ]; then
+              if [[  "${GITHUB_REF}" =~ "tags" ]]; then
+                  BP_MODE="production"
+              fi
+          fi
+          echo "BP_MODE=${BP_MODE}"
+          cd $GITHUB_WORKSPACE
+          mvn verify deploy
+          ./build-osx.sh
+
 
       - name: Archive production artifacts
         uses: actions/upload-artifact@v1
