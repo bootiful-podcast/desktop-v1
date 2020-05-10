@@ -11,7 +11,7 @@ do_run(){
     echo $0
     export SPRING_PROFILES_ACTIVE="$(cat bp_mode)"
     ${DIRECTORY_OF_APP}/desktop.jar
-    disown
+#    disown
 
 }
 

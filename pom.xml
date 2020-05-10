@@ -85,7 +85,8 @@
                         </goals>
                         <configuration>
                             <deployProperties>
-                                <build.vcsRevision>{{TRAVIS_COMMIT}}</build.vcsRevision>
+                                <build.vcsRevision>{{TRAVIS_COMMIT}}
+                                </build.vcsRevision>
                             </deployProperties>
                             <publisher>
                                 <contextUrl>
@@ -94,11 +95,13 @@
                                 <username>${env.ARTIFACTORY_USERNAME}</username>
                                 <password>${env.ARTIFACTORY_PASSWORD}</password>
                                 <repoKey>libs-release-local</repoKey>
-                                <snapshotRepoKey>libs-snapshot-local</snapshotRepoKey>
+                                <snapshotRepoKey>libs-snapshot-local
+                                </snapshotRepoKey>
                             </publisher>
                             <buildInfo>
                                 <agentName>Travis CI</agentName>
-                                <buildNumber>{{TRAVIS_BUILD_NUMBER}}</buildNumber>
+                                <buildNumber>{{TRAVIS_BUILD_NUMBER}}
+                                </buildNumber>
                                 <buildUrl>
                                     http://travis-ci.org/{{TRAVIS_REPO_SLUG}}/builds/{{TRAVIS_BUILD_ID}}
                                 </buildUrl>
@@ -129,6 +132,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <mainClass>
+                        fm.bootifulpodcast.desktop.DesktopApplication
+                    </mainClass>
                     <executable>true</executable>
                 </configuration>
             </plugin>
@@ -143,13 +149,16 @@
             </snapshots>
             <id>central</id>
             <name>libs-release</name>
-            <url>https://cloudnativejava.jfrog.io/cloudnativejava/libs-release</url>
+            <url>https://cloudnativejava.jfrog.io/cloudnativejava/libs-release
+            </url>
         </repository>
         <repository>
             <snapshots/>
             <id>snapshots</id>
             <name>libs-snapshot</name>
-            <url>https://cloudnativejava.jfrog.io/cloudnativejava/libs-snapshot</url>
+            <url>
+                https://cloudnativejava.jfrog.io/cloudnativejava/libs-snapshot
+            </url>
         </repository>
     </repositories>
     <pluginRepositories>
@@ -159,13 +168,16 @@
             </snapshots>
             <id>central</id>
             <name>plugins-release</name>
-            <url>https://cloudnativejava.jfrog.io/cloudnativejava/plugins-release</url>
+            <url>
+                https://cloudnativejava.jfrog.io/cloudnativejava/plugins-release
+            </url>
         </pluginRepository>
         <pluginRepository>
             <snapshots/>
             <id>snapshots</id>
             <name>plugins-snapshot</name>
-            <url>https://cloudnativejava.jfrog.io/cloudnativejava/plugins-snapshot
+            <url>
+                https://cloudnativejava.jfrog.io/cloudnativejava/plugins-snapshot
             </url>
         </pluginRepository>
     </pluginRepositories>
