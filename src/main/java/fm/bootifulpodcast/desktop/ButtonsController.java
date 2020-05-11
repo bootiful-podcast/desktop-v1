@@ -95,7 +95,7 @@ public class ButtonsController implements Initializable {
 
 	@EventListener
 	public void disconnected(ApiDisconnectedEvent e) {
-		log.info("disconnected (" + e.getClass().getName() + ")");
+		log.debug("disconnected (" + e.getClass().getName() + ")");
 		this.connected.set(false);
 		this.updateConnectionStatus(this.disconnectedImageView,
 				this.messages.getMessage(ButtonsController.class, "disconnected", e.getSource().getUri().toString()));
@@ -104,7 +104,7 @@ public class ButtonsController implements Initializable {
 
 	@EventListener
 	public void connected(ApiConnectedEvent e) {
-		log.info("connected (" + e.getClass().getName() + ")");
+		log.debug("connected (" + e.getClass().getName() + ")");
 		this.connected.set(true);
 		this.updateConnectionStatus(this.connectedImageView,
 				this.messages.getMessage(ButtonsController.class, "connected", e.getSource().getUri().toString()));
