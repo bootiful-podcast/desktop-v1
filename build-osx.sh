@@ -24,6 +24,7 @@ touch $app
 cd $(dirname ${app})
 pwd
 ls -la
-tar -c BootifulPodcast.app | gzip -9 > BootifulPodcast.tgz
-ls -la BootifulPodcast.tgz && echo "the application has been saved into ${archive_name}."
+TGZ=BootifulPodcast.tgz
+tar -c BootifulPodcast.app | gzip -9 > $TGZ
+ls -la $TGZ && echo "the application has been saved into $TGZ "
 
