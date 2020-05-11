@@ -5,8 +5,7 @@ export BP_MODE=${BP_MODE:-development}
 mkdir -p target/macos
 HERE=$(cd `dirname $0` && pwd )
 T=target
-app_name=BootifulPodcast
-app=target/macos/${app_name}.app
+app=target/macos/BootifulPodcast.app
 contents=${app}/Contents/
 mac_os=${contents}/MacOS
 resources=${contents}/Resources
@@ -21,8 +20,10 @@ cp -r ${HERE}/assembly/Info.plist ${contents}/Info.plist
 chmod +x $app
 touch $app
 
-archive_name=${app}.tgz
-
-tar -c  $app  | gzip -9 > $archive_name
-echo "the application has been saved into ${archive_name}."
+#archive_name=${app}.tgz
+cd $(dirname ${app})
+pwd
+ls -la
+tar -c BootifulPodcast.app | gzip -9 > BootifulPodcast.tgz
+ls -la BootifulPodcast.tgz && echo "the application has been saved into ${archive_name}."
 
