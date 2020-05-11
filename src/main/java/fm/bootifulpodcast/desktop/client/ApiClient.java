@@ -24,6 +24,7 @@ import java.io.File;
 import java.net.SocketException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -101,7 +102,7 @@ public class ApiClient {
 			var status = (String) jsonMap.get("status");
 			var isActuatorHealthy = response.getStatusCode().is2xxSuccessful() && status.equalsIgnoreCase("UP");
 			if (isActuatorHealthy && this.connected.compareAndSet(false, true)) {
-				publisher.publishEvent(new ApiConnectedEvent());
+				publisher.publishEvent(new ApiConnectedEvent(buildApiStatus()));
 			}
 		}
 		catch (Exception e) {
@@ -109,9 +110,13 @@ public class ApiClient {
 				log.debug("Could not connect to " + this.actuatorUrl);
 			}
 			if (this.connected.compareAndSet(true, false)) {
-				this.publisher.publishEvent(new ApiDisconnectedEvent());
+				this.publisher.publishEvent(new ApiDisconnectedEvent(buildApiStatus()));
 			}
 		}
+	}
+
+	private ApiStatus buildApiStatus() {
+		return new ApiStatus(new Date(), URI.create(this.serverUrl));
 	}
 
 	/*

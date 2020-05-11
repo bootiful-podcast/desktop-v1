@@ -35,6 +35,8 @@ public class ButtonsController implements Initializable {
 
 	public VBox root;
 
+	public Label connectedStatusLine;
+
 	public Button newPodcastButton, publishButton, saveMediaToFileButton, stopMonitoringButton;
 
 	public Label connectedIcon;
@@ -84,15 +86,19 @@ public class ButtonsController implements Initializable {
 		this.stage.set(sre.getSource());
 	}
 
-	private void updateConnectedIcon(ImageView iv) {
-		Platform.runLater(() -> this.connectedIcon.setGraphic(iv));
+	private void updateConnectionStatus(ImageView iv, String statusLine) {
+		Platform.runLater(() -> {
+			this.connectedIcon.setGraphic(iv);
+			this.connectedStatusLine.setText(statusLine);
+		});
 	}
 
 	@EventListener
 	public void disconnected(ApiDisconnectedEvent e) {
 		log.info("disconnected (" + e.getClass().getName() + ")");
 		this.connected.set(false);
-		this.updateConnectedIcon(this.disconnectedImageView);
+		this.updateConnectionStatus(this.disconnectedImageView,
+				this.messages.getMessage(ButtonsController.class, "disconnected", e.getSource().getUri().toString()));
 		this.evaluatePublishButtonState();
 	}
 
@@ -100,7 +106,8 @@ public class ButtonsController implements Initializable {
 	public void connected(ApiConnectedEvent e) {
 		log.info("connected (" + e.getClass().getName() + ")");
 		this.connected.set(true);
-		this.updateConnectedIcon(this.connectedImageView);
+		this.updateConnectionStatus(this.connectedImageView,
+				this.messages.getMessage(ButtonsController.class, "connected", e.getSource().getUri().toString()));
 		this.evaluatePublishButtonState();
 	}
 
@@ -115,7 +122,6 @@ public class ButtonsController implements Initializable {
 	public void productionStarted(PodcastProductionStartedEvent ppse) {
 		this.currentUri.set(ppse.getSource());
 		Platform.runLater(() -> {
-			// this.all.forEach(b -> b.setDisable(true));
 			this.resetButtonsUi();
 			this.visibleDuringProcessing.forEach(b -> b.setDisable(false));
 			this.buttons.getChildren().addAll(this.visibleDuringProcessing);
